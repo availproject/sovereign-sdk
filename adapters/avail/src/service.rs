@@ -141,7 +141,7 @@ impl DaService for DaProvider {
             let transactions = appdata
                 .extrinsics
                 .into_iter()
-                .map(|x| AvailBlobTransaction::new(&x))
+                .map(|extrinsic| AvailBlobTransaction::new(&extrinsic))
                 .collect();
             Ok(AvailBlock {
                 header,
