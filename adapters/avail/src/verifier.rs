@@ -1,15 +1,10 @@
 use crate::spec::DaLayerSpec;
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::{
-    da::{
-        DaSpec, 
-        DaVerifier
-    },
-    traits:: {
-        BlockHeaderTrait, CanonicalHash, 
-    },
-    zk::traits::{ValidityCondition},
-    crypto::{SimpleHasher}
+    crypto::SimpleHasher,
+    da::{DaSpec, DaVerifier},
+    traits::{BlockHeaderTrait, CanonicalHash},
+    zk::traits::ValidityCondition,
 };
 use thiserror::Error;
 

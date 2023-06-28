@@ -141,7 +141,7 @@ impl DaService for DaProvider {
             let transactions = appdata
                 .extrinsics
                 .into_iter()
-                .map(AvailBlobTransaction)
+                .map(|x| AvailBlobTransaction::new(&x))
                 .collect();
             Ok(AvailBlock {
                 header,
@@ -157,7 +157,7 @@ impl DaService for DaProvider {
     }
 
     // Extract the blob transactions relevant to a particular rollup from a block.
-    // NOTE: The avail light client is expected to be run in app specific mode, and hence the 
+    // NOTE: The avail light client is expected to be run in app specific mode, and hence the
     // transactions in the block are already filtered and retrieved by light client.
     fn extract_relevant_txs(
         &self,
@@ -171,13 +171,13 @@ impl DaService for DaProvider {
     // NOTE: The light client here has already completed DA sampling and verification of inclusion and soundness.
     fn get_extraction_proof(
         &self,
-        block: &Self::FilteredBlock,
-        blobs: &[<Self::Spec as DaSpec>::BlobTransaction],
+        _block: &Self::FilteredBlock,
+        _blobs: &[<Self::Spec as DaSpec>::BlobTransaction],
     ) -> (
         <Self::Spec as DaSpec>::InclusionMultiProof,
         <Self::Spec as DaSpec>::CompletenessProof,
     ) {
-        ((),())
+        ((), ())
     }
 
     fn new(
