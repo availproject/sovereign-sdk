@@ -140,8 +140,8 @@ impl DaService for DaProvider {
             let header = AvailHeader::new(header, hash);
             let transactions = appdata
                 .extrinsics
-                .into_iter()
-                .map(|extrinsic| AvailBlobTransaction::new(&extrinsic))
+                .iter()
+                .map(AvailBlobTransaction::new)
                 .collect();
             Ok(AvailBlock {
                 header,

@@ -46,14 +46,14 @@ impl DaVerifier for Verifier {
     // NOTE: Function return unit since application client already verifies application data.
     fn verify_relevant_tx_list<SimpleHasher>(
         &self,
-        _block_header: &<Self::Spec as DaSpec>::BlockHeader,
+        block_header: &<Self::Spec as DaSpec>::BlockHeader,
         _txs: &[<Self::Spec as DaSpec>::BlobTransaction],
         _inclusion_proof: <Self::Spec as DaSpec>::InclusionMultiProof,
         _completeness_proof: <Self::Spec as DaSpec>::CompletenessProof,
     ) -> Result<Self::ValidityCondition, Self::Error> {
         let validity_condition = ChainValidityCondition {
-            prev_hash: *_block_header.prev_hash().inner(),
-            block_hash: *_block_header.hash().inner(),
+            prev_hash: *block_header.prev_hash().inner(),
+            block_hash: *block_header.hash().inner(),
         };
 
         Ok(validity_condition)
