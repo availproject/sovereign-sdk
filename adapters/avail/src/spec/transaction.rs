@@ -1,11 +1,16 @@
-use avail_subxt::api::runtime_types::da_control::pallet::Call;
-use avail_subxt::api::runtime_types::da_runtime::RuntimeCall::DataAvailability;
-use avail_subxt::primitives::AppUncheckedExtrinsic;
-use bytes::Bytes;
+#[cfg(feature = "native")]
+use avail_subxt::{
+    api::runtime_types::{da_control::pallet::Call, da_runtime::RuntimeCall::DataAvailability},
+    primitives::AppUncheckedExtrinsic,
+};
+#[cfg(feature = "native")]
 use codec::Encode;
 use serde::{Deserialize, Serialize};
-use sov_rollup_interface::da::{BlobTransactionTrait, CountedBufReader};
-use subxt::utils::H256;
+use sov_rollup_interface::{
+    da::{BlobTransactionTrait, CountedBufReader},
+};
+use primitive_types::H256;
+use bytes::Bytes;
 
 use super::address::AvailAddress;
 
@@ -39,6 +44,7 @@ impl BlobTransactionTrait for AvailBlobTransaction {
     }
 }
 
+#[cfg(feature = "native")]
 impl AvailBlobTransaction {
     pub fn new(unchecked_extrinsic: &AppUncheckedExtrinsic) -> Self {
         let address = match &unchecked_extrinsic.signature {

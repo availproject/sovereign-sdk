@@ -1,8 +1,16 @@
-start_height = 671431
+# We define the rollup's genesis to occur at Avail block number `start_height`. The rollup will ignore
+# any Avail blocks before this height
+start_height = 7687
+
 [da]
-celestia_rpc_auth_token = "SUPER_SECRET_TOKEN"
-celestia_rpc_address = "http://localhost:11111/"
-# 100 MB
-max_celestia_response_body_size = 104_857_600
+light_client_url = "http://127.0.0.1:7000"
+node_client_url = "ws://127.0.0.1:9944"
+
 [runner.storage]
+# The path to the rollup's data directory. Paths that do not begin with `/` are interpreted as relative paths.
 path = "demo_data"
+
+[rpc_config]
+# the host and port to bind the rpc server for
+bind_host = "127.0.0.1"
+bind_port = 12345

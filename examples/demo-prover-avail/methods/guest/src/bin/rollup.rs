@@ -1,13 +1,11 @@
 // TODO: Rename this file to change the name of this method from METHOD_NAME
 
 #![no_main]
-
-use const_rollup_config::ROLLUP_NAMESPACE_RAW;
 use demo_stf::app::ZkAppRunner;
 use demo_stf::ArrayWitness;
-use jupiter::types::NamespaceId;
-use jupiter::verifier::{CelestiaSpec, CelestiaVerifier};
-use jupiter::{BlobWithSender, CelestiaHeader};
+use presence::spec::{DaLayerSpec};
+use presence::spec::header::AvailHeader;
+use presence::verifier::Verifier;
 use log::info;
 use risc0_adapter::guest::Risc0Guest;
 use risc0_zkvm::guest::env;
@@ -16,9 +14,6 @@ use sov_rollup_interface::da::{DaSpec, DaVerifier};
 use sov_rollup_interface::services::stf_runner::StateTransitionRunner;
 use sov_rollup_interface::stf::{StateTransitionFunction, ZkConfig};
 use sov_rollup_interface::zk::traits::{StateTransition, ValidityCondition, ZkvmGuest};
-
-// The rollup stores its data in the namespace b"sov-test" on Celestia
-const ROLLUP_NAMESPACE: NamespaceId = NamespaceId(ROLLUP_NAMESPACE_RAW);
 
 risc0_zkvm::guest::entry!(main);
 // steps:
@@ -32,19 +27,18 @@ risc0_zkvm::guest::entry!(main);
 pub fn main() {
     env::write(&"Start guest\n");
     // TODO: Remove this
-    info!("Should not be printed from guest");
+    // info!("Should not be printed from guest");
     let guest = Risc0Guest;
-
-    let verifier = CelestiaVerifier::new(jupiter::verifier::RollupParams {
-        namespace: ROLLUP_NAMESPACE,
-    });
+    env::write(&"Start guest 2\n");
+    let verifier = presence::verifier::Verifier {};
+    env::write(&"Start guest 3\n");
     // Step 1: read tx list
-    let header: CelestiaHeader = guest.read_from_host();
+    let header: <DaLayerSpec as DaSpec>::BlockHeader = guest.read_from_host();
     env::write(&"header read\n");
-    let txs: Vec<BlobWithSender> = guest.read_from_host();
+    let txs: Vec<<DaLayerSpec as DaSpec>::BlobTransaction> = guest.read_from_host();
     env::write(&"txs read\n");
-    let inclusion_proof: <CelestiaSpec as DaSpec>::InclusionMultiProof = guest.read_from_host();
-    let completeness_proof: <CelestiaSpec as DaSpec>::CompletenessProof = guest.read_from_host();
+    let inclusion_proof: <DaLayerSpec as DaSpec>::InclusionMultiProof = guest.read_from_host();
+    let completeness_proof: <DaLayerSpec as DaSpec>::CompletenessProof = guest.read_from_host();
 
     // Step 2: Verify tx list
     let validity_condition = verifier
@@ -57,7 +51,7 @@ pub fn main() {
 
 fn state_transition(
     guest: &Risc0Guest,
-    batches: Vec<BlobWithSender>,
+    batches: Vec<<DaLayerSpec as DaSpec>::BlobTransaction>,
     validity_condition: impl ValidityCondition,
 ) {
     let prev_state_root_hash: [u8; 32] = guest.read_from_host();
@@ -87,7 +81,7 @@ fn state_transition(
         validity_condition,
     };
     env::commit(&output);
-    env::write(&"new state root committed\n");
+    env::write(&"new state root committeddd\n");
 }
 
 #[test]

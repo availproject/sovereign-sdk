@@ -2,7 +2,7 @@ use core::fmt::{Display, Formatter};
 
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::AddressTrait;
-use subxt::utils::H256;
+use primitive_types::H256;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 pub struct AvailAddress(pub [u8; 32]);

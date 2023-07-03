@@ -85,13 +85,14 @@ async fn main() -> Result<(), anyhow::Error> {
             demo.init_chain(get_genesis_config());
             info!("Chain initialization is done.");
         } else {
-            debug!("Chain is already initialized. Skipping initialization.");
+            info!("Chain is already initialized. Skipping initialization");
         }
 
         // HACK: Tell the rollup that you're running an empty DA layer block so that it will return the latest state root.
         // This will be removed shortly.
         demo.begin_slot(Default::default());
         let (prev_state_root, _) = demo.end_slot();
+        info!("{:#?}", &prev_state_root.0);
         prev_state_root.0
     };
 
@@ -137,8 +138,9 @@ async fn main() -> Result<(), anyhow::Error> {
         host.write_to_guest(&witness);
 
         info!("Starting proving...");
-        let receipt = host.run().expect("Prover should run successfully");
+        let receipt = host.run().unwrap();
         info!("Start verifying..");
+
         receipt.verify(&ROLLUP_ID).expect("Receipt should be valid");
 
         prev_state_root = next_state_root.0;

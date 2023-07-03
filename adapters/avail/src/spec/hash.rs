@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::da::BlockHashTrait;
-use subxt::utils::H256;
+use primitive_types::H256;
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub struct AvailHash(pub H256);
