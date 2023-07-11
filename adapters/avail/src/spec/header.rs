@@ -1,8 +1,9 @@
-use super::hash::AvailHash;
 use avail_subxt::primitives::Header;
 use serde::{Deserialize, Serialize};
-use sov_rollup_interface::da::{BlockHeaderTrait};
+use sov_rollup_interface::da::BlockHeaderTrait;
 use subxt::utils::H256;
+
+use super::hash::AvailHash;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct AvailHeader {

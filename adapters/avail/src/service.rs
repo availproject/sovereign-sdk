@@ -1,17 +1,21 @@
-use crate::{
-    avail::{Confidence, ExtrinsicsData},
-    spec::{
-        block::AvailBlock, header::AvailHeader, transaction::AvailBlobTransaction, DaLayerSpec,
-    },
-};
+use core::future::Future;
+use core::pin::Pin;
+use core::time::Duration;
+
 use anyhow::anyhow;
 use avail_subxt::AvailConfig;
-use core::{future::Future, pin::Pin, time::Duration};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use sov_rollup_interface::{da::DaSpec, services::da::DaService};
+use sov_rollup_interface::da::DaSpec;
+use sov_rollup_interface::services::da::DaService;
 use subxt::OnlineClient;
 use tracing::info;
+
+use crate::avail::{Confidence, ExtrinsicsData};
+use crate::spec::block::AvailBlock;
+use crate::spec::header::AvailHeader;
+use crate::spec::transaction::AvailBlobTransaction;
+use crate::spec::DaLayerSpec;
 
 #[derive(Debug, Clone)]
 pub struct DaProvider {
@@ -201,11 +205,11 @@ impl DaService for DaProvider {
 
 #[cfg(test)]
 mod tests {
-    use crate::service::RuntimeConfig;
-
-    use super::DaProvider;
     use avail_subxt::build_client;
     use sov_rollup_interface::services::da::DaService;
+
+    use super::DaProvider;
+    use crate::service::RuntimeConfig;
 
     #[tokio::test]
     #[ignore]
