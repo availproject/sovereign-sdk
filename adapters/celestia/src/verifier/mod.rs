@@ -1,27 +1,24 @@
 use nmt_rs::NamespaceId;
 use serde::{Deserialize, Serialize};
-use sov_rollup_interface::{
-    crypto::SimpleHasher,
-    da::{self, BlobTransactionTrait, BlockHashTrait as BlockHash, CountedBufReader, DaSpec},
-    traits::{BlockHeaderTrait, CanonicalHash},
-    zk::traits::ValidityCondition,
-    Buf,
+use sov_rollup_interface::crypto::SimpleHasher;
+use sov_rollup_interface::da::{
+    self, BlobTransactionTrait, BlockHashTrait as BlockHash, BlockHeaderTrait, CountedBufReader,
+    DaSpec,
 };
+use sov_rollup_interface::zk::ValidityCondition;
+use sov_rollup_interface::Buf;
 use thiserror::Error;
 
 pub mod address;
 pub mod proofs;
 
-use crate::{
-    pfb_from_iter,
-    share_commit::recreate_commitment,
-    shares::{read_varint, BlobIterator, NamespaceGroup, Share},
-    types::ValidationError,
-    BlobWithSender, CelestiaHeader, DataAvailabilityHeader,
-};
 use proofs::*;
 
 use self::address::CelestiaAddress;
+use crate::share_commit::recreate_commitment;
+use crate::shares::{read_varint, BlobIterator, NamespaceGroup, Share};
+use crate::types::ValidationError;
+use crate::{pfb_from_iter, BlobWithSender, CelestiaHeader, DataAvailabilityHeader};
 
 pub struct CelestiaVerifier {
     pub rollup_namespace: NamespaceId,
@@ -69,7 +66,9 @@ impl TmHash {
     pub fn inner(&self) -> &[u8; 32] {
         match self.0 {
             tendermint::Hash::Sha256(ref h) => h,
-            tendermint::Hash::None => unreachable!("tendermint::Hash::None should not be possible"),
+            // Hack: when the hash is None, we return a hash of all 255s as a placeholder.
+            // TODO: add special casing for the genesis block at a higher level
+            tendermint::Hash::None => &[255u8; 32],
         }
     }
 }
@@ -234,7 +233,7 @@ impl da::DaVerifier for CelestiaVerifier {
                 let blob_ref = blob.clone();
 
                 let mut blob_iter = blob_ref.data();
-                let mut blob_data = Vec::with_capacity(blob_iter.remaining());
+                let mut blob_data = vec![0; blob_iter.remaining()];
                 blob_iter.copy_to_slice(blob_data.as_mut_slice());
                 let tx_data = tx.data().acc();
 

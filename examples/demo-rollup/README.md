@@ -1,10 +1,55 @@
-# Demo Rollup
+# Demo Rollup ![Time - ~5 mins](https://img.shields.io/badge/Time-~5_mins-informational)
 
 This is a demo full node running a simple Sovereign SDK rollup on [Celestia](https://celestia.org/).
 
-## What is it?
+<p align="center">
+  <img width="50%" src="../../assets/discord-banner.png">
+  <br>
+  <i>Stuck, facing problems, or unsure about something?</i>
+  <br>
+  <i>Join our <a href="https://discord.gg/kbykCcPrcA">Discord</a> and ask your questions in <code>#support</code>!</i>
+</p>
 
-This demo shows how to integrate a State Transition Function with a DA layer and a ZKVM to create a full
+#### Table of Contents
+
+<!-- https://github.com/thlorenz/doctoc -->
+<!-- $ doctoc README.md --github --notitle -->
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [What is This?](#what-is-this)
+- [Getting Started](#getting-started)
+  - [Run a local DA layer instance](#run-a-local-da-layer-instance)
+  - [Start the Rollup Full Node](#start-the-rollup-full-node)
+  - [Sanity Check: Creating a Token](#sanity-check-creating-a-token)
+  - [How to Submit Transactions](#how-to-submit-transactions)
+    - [1. Build `sov-cli`](#1-build-sov-cli)
+    - [2. Serialize the Call](#2-serialize-the-call)
+    - [3. Bundle the Serialized Transaction](#3-bundle-the-serialized-transaction)
+    - [4. Submit the Transaction](#4-submit-the-transaction)
+    - [5. Verify the Token Supply](#5-verify-the-token-supply)
+  - [Makefile](#makefile)
+  - [Remote setup](#remote-setup)
+- [How to Customize This Example](#how-to-customize-this-example)
+  - [1. Initialize the DA Service](#1-initialize-the-da-service)
+  - [2. Initialize the State Transition Function](#2-initialize-the-state-transition-function)
+  - [3. Run the Main Loop](#3-run-the-main-loop)
+- [Disclaimer](#disclaimer)
+- [Interacting with your Node via RPC](#interacting-with-your-node-via-rpc)
+  - [Key Concepts](#key-concepts)
+  - [RPC Methods](#rpc-methods)
+    - [`ledger_getHead`](#ledger_gethead)
+    - [`ledger_getSlots`](#ledger_getslots)
+    - [`ledger_getBatches`](#ledger_getbatches)
+    - [`ledger_getTransactions`](#ledger_gettransactions)
+    - [`ledger_getEvents`](#ledger_getevents)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## What is This?
+
+This demo shows how to integrate a State Transition Function (STF) with a Data Availability (DA) layer and a ZKVM to create a full
 zk-rollup. The code in this repository corresponds to running a full-node of the rollup, which executes
 every transaction. If you want to see the logic for _proof generation_, check out the [demo-prover](../demo-prover/)
 package instead.
@@ -13,6 +58,289 @@ By swapping out or modifying the imported state transition function, you can cus
 this example full-node to run arbitrary logic.
 This particular example relies on the state transition exported by [`demo-stf`](../demo-stf/). If you want to
 understand how to build your own state transition function, check out at the docs in that package.
+
+## Getting Started
+
+### Run a local DA layer instance
+
+1. Install Docker: https://www.docker.com.
+
+2. Switch to the `examples/demo-rollup` directory (which is where this `README.md` is located!).
+
+    ```
+    $ cd examples/demo-rollup/
+    ```
+
+3. Spin up a local Celestia instance as your DA layer. We've built a small Makefile to simplify that process:
+
+    ```
+    $ make clean
+    $ make start   # Make sure to run `make stop` when you're done with this demo!
+    ```
+
+    If interested, you can check out what the Makefile does [here](#Makefile).  
+    The above command will also modify some configuration files:
+
+    ```
+    $ git status
+    ..
+    ..
+    	modified:   ../const-rollup-config/src/lib.rs
+    	modified:   rollup_config.toml
+    ```
+
+### Start the Rollup Full Node 
+
+Now run the demo-rollup full node, as shown below. You will see it consuming blocks from the Celestia node running inside Docker:
+
+```
+# Make sure you're still in the examples/demo-rollup directory.
+$ cargo run
+2023-06-07T10:03:25.473920Z  INFO jupiter::da_service: Fetching header at height=1...
+2023-06-07T10:03:25.496853Z  INFO sov_demo_rollup: Received 0 blobs
+2023-06-07T10:03:25.497700Z  INFO sov_demo_rollup: Requesting data for height 2 and prev_state_root 0xa96745d3184e54d098982daf44923d84c358800bd22c1864734ccb978027a670
+2023-06-07T10:03:25.497719Z  INFO jupiter::da_service: Fetching header at height=2...
+2023-06-07T10:03:25.505412Z  INFO sov_demo_rollup: Received 0 blobs
+2023-06-07T10:03:25.505992Z  INFO sov_demo_rollup: Requesting data for height 3 and prev_state_root 0xa96745d3184e54d098982daf44923d84c358800bd22c1864734ccb978027a670
+2023-06-07T10:03:25.506003Z  INFO jupiter::da_service: Fetching header at height=3...
+2023-06-07T10:03:25.511237Z  INFO sov_demo_rollup: Received 0 blobs
+2023-06-07T10:03:25.511815Z  INFO sov_demo_rollup: Requesting data for height 4 and prev_state_root 0xa96745d3184e54d098982daf44923d84c358800bd22c1864734ccb978027a670
+```
+
+Leave it running while you proceed with the rest of the demo.
+
+### Sanity Check: Creating a Token
+
+After switching to a new terminal tab, let's submit our first transaction by creating a token:
+
+```
+$ make test-create-token 
+```
+
+...wait a few seconds and you will see the transaction receipt in the output of the demo-rollup full node:
+
+```
+2023-06-07T10:05:10.431888Z  INFO jupiter::da_service: Fetching header at height=18...
+2023-06-07T10:05:20.493991Z  INFO sov_demo_rollup: Received 1 blobs
+2023-06-07T10:05:20.496571Z  INFO sov_demo_rollup: receipts: BatchReceipt { batch_hash: [44, 38, 61, 124, 123, 92, 9, 196, 200, 211, 52, 149, 33, 172, 120, 239, 180, 106, 72, 9, 161, 68, 8, 87, 127, 190, 201, 94, 9, 30, 108, 188], tx_receipts: [TransactionReceipt { tx_hash: [160, 103, 81, 53, 69, 140, 72, 198, 215, 190, 38, 242, 70, 204, 226, 217, 216, 22, 210, 142, 110, 221, 222, 171, 26, 40, 158, 236, 110, 107, 160, 170], body_to_save: None, events: [], receipt: Successful }], inner: Rewarded(0) }
+```
+
+### How to Submit Transactions
+
+The `make test-create-token` command above was useful to test if everything is running correctly. Now let's get a better understanding of how to create and submit a transaction.
+
+#### 1. Build `sov-cli`
+
+You'll need the `sov-cli` binary in order to create transactions. Build it with these commands:
+
+```console
+$ cd ../demo-stf   # Assuming you're still in examples/demo-rollup/
+$ cargo build --bin sov-cli
+$ cd ../..   # Go back to the root of the repository
+$ ./target/debug/sov-cli -h
+Main entry point for CLI
+
+Usage: sov-cli <COMMAND>
+
+Commands:
+  serialize-call  Serialize a call to a module. This creates a dat file containing the serialized transaction
+  make-blob       
+  util            Utility commands
+  help            Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
+Each transaction that we want to submit is a member of the `CallMessage` enum defined as part of creating a module. For example, let's consider the `Bank` module's `CallMessage`:
+
+```rust
+pub enum CallMessage<C: sov_modules_api::Context> {
+    /// Creates a new token with the specified name and initial balance.
+    CreateToken {
+        /// Random value use to create a unique token address.
+        salt: u64,
+        /// The name of the new token.
+        token_name: String,
+        /// The initial balance of the new token.
+        initial_balance: Amount,
+        /// The address of the account that the new tokens are minted to.
+        minter_address: C::Address,
+        /// Authorized minter list.
+        authorized_minters: Vec<C::Address>,
+    },
+
+    /// Transfers a specified amount of tokens to the specified address.
+    Transfer {
+        /// The address to which the tokens will be transferred.
+        to: C::Address,
+        /// The amount of tokens to transfer.
+        coins: Coins<C>,
+    },
+
+    /// Burns a specified amount of tokens.
+    Burn {
+        /// The amount of tokens to burn.
+        coins: Coins<C>,
+    },
+
+    /// Mints a specified amount of tokens.
+    Mint {
+        /// The amount of tokens to mint.
+        coins: Coins<C>,
+        /// Address to mint tokens to
+        minter_address: C::Address,
+    },
+
+    /// Freeze a token so that the supply is frozen
+    Freeze {
+        /// Address of the token to be frozen
+        token_address: C::Address,
+    },
+}
+```
+In the above snippet, we can see that `CallMessage` in `Bank` support five different types of calls. The `sov-cli` has the ability to parse a JSON file that aligns with any of these calls and subsequently serialize them. The structure of the JSON file, which represents the call, closely mirrors that of the Enum member. Consider the `Transfer` message as an example:
+```rust
+Transfer {
+    /// The address to which the tokens will be transferred.
+    to: C::Address,
+    /// The amount of tokens to transfer.
+    coins: Coins<C>,
+}
+```
+
+Here's an example of a JSON representing the above call:
+
+```json
+{
+  "Transfer":{
+    "to":"sov1zgfpyysjzgfpyysjzgfpyysjzgfpyysjzgfpyysjzgfpyysjzgfqve8h6h",
+    "coins":{
+      "amount":200,
+      "token_address":"sov1zdwj8thgev2u3yyrrlekmvtsz4av4tp3m7dm5mx5peejnesga27svq9m72"
+    }
+  }
+}
+```
+
+#### 2. Serialize the Call
+
+The JSON above is the contents of the file `demo-stf/src/sov-cli/test_data/transfer.json`. We'll use this transaction as our example for the rest of the tutorial. In order to serialize the transaction JSON to submit to our local Celestia node, we need to perform 2 operations:
+- Serialize the JSON representation of the transaction.
+- Bundle serialized transaction files into a blob (since DA layers accept blobs which can contain multiple transactions).
+
+Note: we're able to make a `Transfer` call here because we already created the token as part of the sanity check above, using `make test-create-token`.
+
+To serialize transactions you must use the `sov-cli serialize-call` subcommand, as shown below:
+
+```
+$ ./target/debug/sov-cli serialize-call -h
+Serialize a call to a module. This creates a dat file containing the serialized transaction
+
+Usage: sov-cli serialize-call <SENDER_PRIV_KEY_PATH> <MODULE_NAME> <CALL_DATA_PATH> <NONCE>
+
+Arguments:
+  <SENDER_PRIV_KEY_PATH>  Path to the json file containing the private key of the sender
+  <MODULE_NAME>           Name of the module to generate the call. Modules defined in your Runtime are supported. (eg: Bank, Accounts)
+  <CALL_DATA_PATH>        Path to the json file containing the parameters for a module call
+  <NONCE>                 Nonce for the transaction
+```
+For our test, we'll use the test private key located at `examples/demo-stf/src/sov-cli/test_data/minter_private_key.json`. This private key also corresponds to the address used in the `minter_address` field of the `create_token.json` file. This was the address that `make test-create-token` minted the new tokens to.
+
+Let's go ahead and serialize the transaction:
+
+```
+$ ./target/debug/sov-cli serialize-call ./examples/demo-stf/src/sov-cli/test_data/minter_private_key.json Bank ./examples/demo-stf/src/sov-cli/test_data/transfer.json 0
+```
+Once the above command executes successfully, there will be a file named `./examples/demo-stf/src/sov-cli/test_data/transfer.dat`:
+
+```
+$ cat ./examples/demo-stf/src/sov-cli/test_data/transfer.dat
+725f40c15bed53b271e23dccbbb61736a55a5dd7cf79a31dec928c664c55d6e00f8afb3273bf7ec3409187a848edfed9991ed3126bdca048361aecc3349a180f7b758bf2e7670fafaf6bf0015ce0ff5aa802306fc7e3f45762853ffc37180fe64a00000000011212121212121212121212121212121212121212121212121212121212121212c800000000000000135d23aee8cb15c890831ff36db170157acaac31df9bba6cd40e7329e608eabd0000000000000000
+```
+The above is the hex representation of the serialized transaction.
+
+#### 3. Bundle the Serialized Transaction
+
+After serializing your transactions (just one in this case), you must bundle them into a blob. You can use the `sov-cli make-blob` subcommand:
+
+```
+$ ./target/debug/sov-cli make-blob -h
+Usage: sov-cli make-blob [PATH_LIST]...
+
+Arguments:
+  [PATH_LIST]...  List of serialized transactions
+```
+
+Use the command below to store the serialized blob in `./examples/demo-stf/src/sov-cli/test_data/tx_blob`:
+
+```
+$ ./target/debug/sov-cli make-blob ./examples/demo-stf/src/sov-cli/test_data/transfer.dat > ./examples/demo-stf/src/sov-cli/test_data/tx_blob
+$ cat ./examples/demo-stf/src/sov-cli/test_data/tx_blob
+01000000b6000000bb5fb10b2732f7bbee3505c5fc0a43f56b02014169b1f80f9493da65843bbb10ce443c9b583964a9e5224baca492474e87664444cdce0364cbc562bd507e40067b758bf2e7670fafaf6bf0015ce0ff5aa802306fc7e3f45762853ffc37180fe64a00000000011212121212121212121212121212121212121212121212121212121212121212c800000000000000135d23aee8cb15c890831ff36db170157acaac31df9bba6cd40e7329e608eabd0100000000000000
+```
+
+#### 4. Submit the Transaction
+
+You now have a blob with one serialized transaction in `./examples/demo-stf/src/sov-cli/test_data/tx_blob`. Switch back to the `examples/demo-rollup` directory and use the Makefile to submit it:
+
+```
+$ cd examples/demo-rollup
+$ SERIALIZED_BLOB_PATH=../demo-stf/src/sov-cli/test_data/tx_blob make submit-txn
+```
+
+Here the `make submit-txn` command locates the Docker container the Celestia instance is running in, and runs the Celestia-specific command to submit the transaction.
+
+#### 5. Verify the Token Supply
+
+```
+$ curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"bank_supplyOf","params":["sov1zdwj8thgev2u3yyrrlekmvtsz4av4tp3m7dm5mx5peejnesga27svq9m72"],"id":1}' http://127.0.0.1:12345
+{"jsonrpc":"2.0","result":{"amount":1000},"id":1}
+```
+
+### Makefile
+`demo-rollup/Makefile` automates a number of things for convenience:
+
+* Pull a docker container that runs a single instance of a celestia full node for a local setup
+* The docker container is built with celestia 0.7.1 at present and is compatible with Jupiter (sovereign's celestia adapter)
+* `make clean`:
+  * Stops any running containers with the name `sov-celestia-local` and also removes them
+  * Removes `demo-data` (or the configured path of the rollup database from rollup_config.toml)
+* `make start`:
+  * Pulls the `sov-celestia-local:genesis-v0.7.1` docker image
+  * Performs a number of checks to ensure container is not already running
+  * Starts the container with the name `sov-celestia-local`
+  * Exposes the RPC port `26658` (as configured in the Makefile)
+  * Waits until the container is started
+    * It polls the running service inside the container for a specific RPC call, so there will be some errors printed while the container is starting up. This is ok
+  * Creates a key inside the docker container using `celestia-appd` that is bundled inside the container - the key is named `sequencer-da-address`
+  * The `sequencer-da-address` key is then funded with `10000000utia` configured by the `AMOUNT` variable in the Makefile
+  * The validator itself runs with the key name `validator` and is also accessible inside the container but this shouldn't be necessary
+  * Sets up the config
+    * `examples/const-rollup-config/src/lib.rs` is modified by the `make` command so that `pub const SEQUENCER_DA_ADDRESS` is set to the address of the key ``sov-celestia-local` that was created and funded in the previous steps
+    * `examples/demo-rollup/rollup_config.toml` is modified -
+      * `start_height` is set to `1` since this is a fresh start
+      * `celestia_rpc_auth_token` is set to the auth token retrieved by running the container bundled `celestia-appd`
+        * `/celestia bridge auth admin --node.store /bridge` is the command that is run inside the container to get the token
+      * `celestia_rpc_address` is set to point to `127.0.0.1` and the `RPC_PORT` configured in the Makefile (default 26658)
+      * The config is stashed and the changes are visible once you do a `git status` after running `make start`
+* `make stop`:
+  * Stops the Celestia Docker image, if running.
+  * Deletes all contents of the demo-rollup database.
+* For submitting transactions, we use `make submit-txn SERIALIZED_BLOB_PATH=....`
+  * This makes use of `celestia-appd tx blob PayForBlobs` inside the docker container to submit the blob to the full node
+  * `--from ` is set to `sequencer-da-address` whose address has been updated at `examples/const-rollup-config/src/lib.rs`
+  * The namespace of celestia that the blob needs to be submitted to is obtained by using `sov-cli util print-namespace` which reads the namespace from `examples/const-rollup-config/src/lib.rs`
+  * The content of the blob is read directly from the file passed in via the command line using `SERIALIZED_BLOB_PATH`
+  * `BLOB_TXN_FEE` is set to `300utia` and would likely not need to be modified
+
+### Remote setup
+
+> 🚧 This feature is under development! 🚧
+
+The above setup runs Celestia node locally to avoid any external network dependencies and to speed up development. The Sovereign SDK can also be configured to connect to the Celestia testnet using a Celestia light node running on your machine.
+At present, the remote setup is not functional because the Celestia testnet version that our Celestia adapter supports has been sunsetted. We are collaborating with the Celestia team to update the adapter.
 
 ## How to Customize This Example
 
@@ -24,7 +352,7 @@ Given that constraint, we won't try to give you specific instructions for suppor
 combination of DA layers and State Transition Functions. Instead, we'll explain at a high level what
 tasks a full-node needs to accomplish.
 
-### Step 1: Initialize the DA Service
+### 1. Initialize the DA Service
 
 The first _mandatory_ step is to initialize a DA service, which allows the full node implementation to
 communicate with the DA layer's RPC endpoints.
@@ -33,9 +361,9 @@ If you're using Celestia as your DA layer, you can follow the instructions at th
 of this document to set up a local full node, or connect to
 a remote node. Whichever option you pick, simply place the URL and authentication token
 in the `rollup_config.toml` file and it will be
-automatically picked up by the node implementation.
+automatically picked up by the node implementation. For this tutorial, the Makefile below (which also helps start a local Celestia instance) handles this step for you.
 
-### Step 2: Initialize the State Transition Function
+### 2. Initialize the State Transition Function
 
 The next step is to initialize your state transition function. If it implements the [StateTransitionRunner](../../rollup-interface/src/state_machine/stf.rs)
 interface, you can use that for easy initialization.
@@ -55,7 +383,7 @@ let _handle = tokio::spawn(async move {
 });
 ```
 
-### Step 3: Run the Main Loop
+### 3. Run the Main Loop
 
 The full node implements a simple loop for processing blocks. The workflow is:
 
@@ -67,85 +395,11 @@ The full node implements a simple loop for processing blocks. The workflow is:
 In this demo, we also keep a `ledger_db`, which stores information
 related to the chain's history - batches, transactions, receipts, etc.
 
-## Warning
+## Disclaimer
 
-This is a prototype. It contains known vulnerabilities and should not be used in production under any
-circumstances.
+> ⚠️ Warning! ⚠️
 
-## Getting Started
-
-### Set up Celestia
-
-The current prototype runs against Celestia-node version `v0.7.1`. This is the version used on the `arabica` testnet
-as of Mar 18, 2023. To get started, you'll need to sync a Celestia light node running on the Arabica testnet
-
-1. Clone the repository: `git clone https://github.com/celestiaorg/celestia-node.git`.
-1. `cd celestia-node`
-1. Checkout the code at v0.7.1: `git checkout tags/v0.7.1`
-1. Build and install the celestia binary: `make build && make go-install`
-1. Build celestia's key management tool `make cel-key`
-1. Initialize the node: `celestia light init --p2p.network arabica`
-1. Start the node with rpc enabled. Our default config uses port 11111: `celestia light start --core.ip https://limani.celestia-devops.dev --p2p.network arabica --gateway --rpc.port 11111`. If you want to use a different port, you can adjust the rollup's configuration in rollup_config.toml.
-1. Obtain a JWT for RPC access: `celestia light auth admin --p2p.network arabica`
-1. Copy the JWT and and store it in the `celestia_rpc_auth_token` field of the rollup's config file (`rollup_config.toml`). Be careful to paste the entire JWT - it may wrap across several lines in your terminal.
-1. Wait a few minutes for your Celestia node to sync. It needs to have synced to the rollup's configured `start_height `671431` before the demo can run properly.
-
-Once your Celestia node is up and running, simply `cargo +nightly run` to test out the prototype.
-
-### Submitting transactions
-
-You can use either the rest API or celestia-appd. The following instructions assume celestia-appd.
-For testing, we can submit a transaction to the bank module to create a new token
-
-- Ensure demo-rollup is running in one window following the steps from the previous section, and that it's caught up
-
-### Install celestia-appd
-
-1. Install Go 1.20 - https://go.dev/doc/install
-2. Clone the repository: `git clone https://github.com/celestiaorg/celestia-app.git`.
-3. `cd celestia-app`
-4. Check out tag v0.13.0 - `git checkout tags/v0.13.0`
-5. `make install`
-
-### Create local keypair
-
-1. `celestia-appd keys add sequencer_keypair` (this will be the sequencer da keypair)
-2. For the arabica testnet, you can get tokens from the arabica-faucet channel in the celestia discord https://discord.gg/celestiacommunity
-
-### Create bank transaction
-
-1. `cd ../../` (sovereign root)
-2. `cargo build --release --bin sov-cli`
-3. `./target/release/sov-cli util create-private-key .` This is the rollup private key that's used to sign rollup transactions. It's important to make the distinction between this key and the sequencer private key.
-4. `ls -lahtr | grep sov1` - you should see a new json file created containing the keypair. We will refer to this in later commands as `<rollup_keypair.json>`
-5. `./target/release/sov-cli serialize-call <rollup_keypair.json> Bank examples/demo-stf/src/sov-cli/test_data/create_token.json 0`
-6. Get the token address from the above the command (on Step 4) eg: `sov1jzvd95rjx7xpcdun2h8kyqee2z5r988h3wy4gsdn6ukc5ae04dvsrad3jj`
-7. The binary serialized transaction is created at : `examples/demo-stf/src/sov-cli/test_data/create_token.dat`
-
-### Submit blob to celestia
-
-```
-$ xxd -p examples/demo-stf/src/sov-cli/test_data/create_token.dat | tr -d '\n'
-01000000b0000000dd02eda4c1d40cdbb13686c58a127b82cb18d36191afd7eddd7e6eaeeee5bc82f139a4ef84f578e86f9f6c920fb32f505a1fa78d11ff4059263dd3037d44d8035b35bae2751216067eef40b8bad501bab50111e8f74dbb1d64c1a629dcf093c74400000001000b000000000000000e000000736f762d746573742d746f6b656ee803000000000000a3201954f70ad62230dc3d840a5bf767702c04869e85ab3eee0b962857ba75980000000000000000
-
-$ celestia-appd tx blob PayForBlobs 736f762d74657374 01000000b000000004ee8ca2c343fe0acd2b72249c48b56351ebfb4b7eef73ddae363880b61380cc23b3ebf15375aa110d7aa84206b1f22c1885b26e980d5e03244cc588e314b004a60b594d5751dc2a326c18923eaa74b48424c0f246733c6c028d7ee16899ad944400000001000b000000000000000e000000736f762d746573742d746f6b656e8813000000000000a3201954f70ad62230dc3d840a5bf767702c04869e85ab3eee0b962857ba75980000000000000000 --from sequencer_keypair --node tcp://limani.celestia-devops.dev:26657 --chain-id=arabica-6 --fees=300utia
-
-```
-
-- `xxd` is used to convert the serialized file into hex to post as an argument to `celestia-appd`
-- `736f762d74657374` is the namespace `ROLLUP_NAMESPACE` in `examples/demo-rollup/src/main.rs`
-- `01000000b000000004ee8ca2....` is the serialized binary blob in hex
-- `sequencer_keypair` is the keypair created earlier and should also match the value of `SEQUENCER_DA_ADDRESS` in `examples/demo-rollup/src/main.rs`
-- `celestia-appd` asks for confirmation - accept with y/Y
-
-### Verify the supply of the new token created
-
-```
-$ curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"bank_supplyOf","params":["sov1jzvd95rjx7xpcdun2h8kyqee2z5r988h3wy4gsdn6ukc5ae04dvsrad3jj"],"id":1}' http://127.0.0.1:12345
-{"jsonrpc":"2.0","result":{"amount":5000},"id":1}
-```
-
-- params: should be the token address created in step 6
+`demo-rollup` is a prototype! It contains known vulnerabilities and should not be used in production under any circumstances.
 
 ## Interacting with your Node via RPC
 
@@ -180,14 +434,15 @@ wherever possible, though, since resolving other identifiers may require additio
 
 Some examples will make this clearer. Suppose that slot number `5` contaisn batches `9`, `10`, and `11`, that batch `10` contains
 transactions `50`-`81`, and that transaction `52` emits event number `17`. If we want to fetch events number `17`, we can use any of the following queries:
-`{"jsonrpc":"2.0","method":"ledger_getEvents","params":[[17]], ... } ,`
-`{"jsonrpc":"2.0","method":"ledger_getEvents","params":[[{"transaction_id": 50, "offset": 0}]], ... } ,`
-`{"jsonrpc":"2.0","method":"ledger_getEvents","params":[[{"transaction_id": 50, "key": [1, 2, 4, 2, ...]}]], ... } ,`
-`{"jsonrpc":"2.0","method":"ledger_getEvents","params":[[{"transaction_id": { "batch_id": 10, "offset": 2}, "offset": 0}]], ... } ,`
 
-### **METHODS**
+- `{"jsonrpc":"2.0","method":"ledger_getEvents","params":[[17]], ... }`
+- `{"jsonrpc":"2.0","method":"ledger_getEvents","params":[[{"transaction_id": 50, "offset": 0}]], ... }`
+- `{"jsonrpc":"2.0","method":"ledger_getEvents","params":[[{"transaction_id": 50, "key": [1, 2, 4, 2, ...]}]], ... }`
+- `{"jsonrpc":"2.0","method":"ledger_getEvents","params":[[{"transaction_id": { "batch_id": 10, "offset": 2}, "offset": 0}]], ... }`
 
-### ledger_getHead
+### RPC Methods
+
+#### `ledger_getHead`
 
 This method returns the current head of the ledger. It has no arguments.
 
@@ -202,7 +457,7 @@ $ curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method"
 This response indicates that the most recent slot processed was number `22019`, its hash, and that it contained no batches (since the `start` and `end`
 of the `batch_range` overlap). It also indicates that the next available batch to occur will be numbered `2`.
 
-### ledger_getSlots
+#### `ledger_getSlots`
 
 This method retrieves slot data. It takes two arguments, a list of `SlotIdentifier`s and an optional `QueryMode`. If no query mode is provided,
 this list of identifiers may be flattened: `"params":[[7]]` and `"params":[7]` are both acceptable, but `"params":[7, "Compact"]` is not.
@@ -217,7 +472,7 @@ $ curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method"
 
 This response indicates that slot number `6` contained batch `1` and gives the
 
-### ledger_getBatches
+#### `ledger_getBatches`
 
 This method retrieves slot data. It takes two arguments, a list of `BatchIdentifier`s and an optional `QueryMode`. If no query mode is provided,
 this list of identifiers may be flattened: `"params":[[7]]` and `"params":[7]` are both acceptable, but `"params":[7, "Compact"]` is not.
@@ -230,7 +485,7 @@ $ curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method"
 {"jsonrpc":"2.0","result":[{"hash":"0xf784a42555ed652ed045cc8675f5bc11750f1c7fb0fbc8d6a04470a88c7e1b6c","tx_range":{"start":1,"end":2},"txs":["0x191d87a51e4e1dd13b4d89438c6717b756bd995d7108bef21a5ac0c9b6c77101"],"custom_receipt":"Rewarded"}],"id":1}%
 ```
 
-### ledger_getTransactions
+#### `ledger_getTransactions`
 
 This method retrieves transactions. It takes two arguments, a list of `TxIdentifiers`s and an optional `QueryMode`. If no query mode is provided,
 this list of identifiers may be flattened: `"params":[[7]]` and `"params":[7]` are both acceptable, but `"params":[7, "Compact"]` is not.
@@ -245,7 +500,7 @@ $ curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method"
 
 This response indicates that transaction `1` emitted no events but executed successfully.
 
-### ledger_getEvents
+#### `ledger_getEvents`
 
 This method retrieves the events based on the provided event identifiers.
 
@@ -261,8 +516,7 @@ This response indicates that event `1` has not been emitted yet.
 
 ## License
 
-Licensed under the [Apache License, Version
-2.0](../../LICENSE).
+Licensed under the [Apache License, Version 2.0](../../LICENSE).
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in this repository by you, as defined in the Apache-2.0 license, shall be

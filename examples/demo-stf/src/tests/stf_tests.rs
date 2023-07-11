@@ -1,18 +1,16 @@
 #[cfg(test)]
 pub mod test {
-    use crate::genesis_config::create_demo_config;
-    use crate::tests::new_test_blob;
-    use crate::{
-        genesis_config::{DEMO_SEQUENCER_DA_ADDRESS, LOCKED_AMOUNT},
-        runtime::Runtime,
-        tests::{create_new_demo, data_generation::simulate_da, has_tx_events, C},
-    };
-    use sov_modules_api::{
-        default_context::DefaultContext, default_signature::private_key::DefaultPrivateKey,
-    };
+    use sov_modules_api::default_context::DefaultContext;
+    use sov_modules_api::default_signature::private_key::DefaultPrivateKey;
     use sov_modules_stf_template::{Batch, SequencerOutcome};
-    use sov_rollup_interface::{mocks::MockZkvm, stf::StateTransitionFunction};
+    use sov_rollup_interface::mocks::MockZkvm;
+    use sov_rollup_interface::stf::StateTransitionFunction;
     use sov_state::{ProverStorage, WorkingSet};
+
+    use crate::genesis_config::{create_demo_config, DEMO_SEQUENCER_DA_ADDRESS, LOCKED_AMOUNT};
+    use crate::runtime::Runtime;
+    use crate::tests::data_generation::simulate_da;
+    use crate::tests::{create_new_demo, has_tx_events, new_test_blob, C};
 
     #[test]
     fn test_demo_values_in_db() {
@@ -40,8 +38,9 @@ pub mod test {
                 None,
             );
 
-            assert!(
-                matches!(apply_blob_outcome.inner, SequencerOutcome::Rewarded(0),),
+            assert_eq!(
+                SequencerOutcome::Rewarded(0),
+                apply_blob_outcome.inner,
                 "Sequencer execution should have succeeded but failed "
             );
 
@@ -97,9 +96,10 @@ pub mod test {
             None,
         );
 
-        assert!(
-            matches!(apply_blob_outcome.inner, SequencerOutcome::Rewarded(0),),
-            "Sequencer execution should have succeeded but failed "
+        assert_eq!(
+            SequencerOutcome::Rewarded(0),
+            apply_blob_outcome.inner,
+            "Sequencer execution should have succeeded but failed"
         );
 
         assert!(has_tx_events(&apply_blob_outcome),);
@@ -151,9 +151,10 @@ pub mod test {
                 None,
             )
             .inner;
-            assert!(
-                matches!(apply_blob_outcome, SequencerOutcome::Rewarded(0),),
-                "Sequencer execution should have succeeded but failed "
+            assert_eq!(
+                SequencerOutcome::Rewarded(0),
+                apply_blob_outcome,
+                "Sequencer execution should have succeeded but failed",
             );
         }
 
@@ -197,15 +198,16 @@ pub mod test {
 
         let txs = simulate_da(value_setter_admin_private_key, election_admin_private_key);
 
-        let some_sequencer: [u8; 32] = [101; 32];
+        let some_sequencer: [u8; 32] = [121; 32];
         let apply_blob_outcome = StateTransitionFunction::<MockZkvm>::apply_blob(
             &mut demo,
             &mut new_test_blob(Batch { txs }, &some_sequencer),
             None,
         );
 
-        assert!(
-            matches!(apply_blob_outcome.inner, SequencerOutcome::Ignored),
+        assert_eq!(
+            SequencerOutcome::Ignored,
+            apply_blob_outcome.inner,
             "Batch should have been skipped due to unknown sequencer"
         );
 
