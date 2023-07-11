@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use sov_rollup_interface::crypto::SimpleHasher;
 use sov_rollup_interface::da::{BlockHeaderTrait, DaSpec, DaVerifier};
 use sov_rollup_interface::zk::ValidityCondition;
 use thiserror::Error;
