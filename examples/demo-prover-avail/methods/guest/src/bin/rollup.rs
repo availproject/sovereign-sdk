@@ -13,7 +13,7 @@ use sov_rollup_interface::crypto::NoOpHasher;
 use sov_rollup_interface::da::{DaSpec, DaVerifier};
 use sov_rollup_interface::services::stf_runner::StateTransitionRunner;
 use sov_rollup_interface::stf::{StateTransitionFunction, ZkConfig};
-use sov_rollup_interface::zk::traits::{StateTransition, ValidityCondition, ZkvmGuest};
+use sov_rollup_interface::zk::{StateTransition, ValidityCondition, ZkvmGuest};
 
 risc0_zkvm::guest::entry!(main);
 // steps:
