@@ -6,10 +6,10 @@ use avail_subxt::{
 use codec::Encode;
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::{
-    da::{BlobTransactionTrait, CountedBufReader},
-    Bytes,
+    da::{BlobTransactionTrait, CountedBufReader}
 };
 use subxt::utils::H256;
+use bytes::Bytes;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 //pub struct AvailBlobTransaction(pub AppUncheckedExtrinsic);

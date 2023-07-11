@@ -1,6 +1,6 @@
 use core::fmt::{Display, Formatter};
 use serde::{Deserialize, Serialize};
-use sov_rollup_interface::traits::AddressTrait;
+use sov_rollup_interface::AddressTrait;
 use subxt::utils::H256;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]

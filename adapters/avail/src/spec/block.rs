@@ -1,6 +1,7 @@
 use super::{header::AvailHeader, transaction::AvailBlobTransaction};
 use serde::{Deserialize, Serialize};
-use sov_rollup_interface::{services::da::SlotData, traits::CanonicalHash};
+use sov_rollup_interface::{services::da::SlotData};
+use sov_rollup_interface::da::BlockHeaderTrait;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct AvailBlock {
