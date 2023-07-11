@@ -25,6 +25,7 @@ codec = { package = "parity-scale-codec", version = "3.0.0", default-features = 
 
 thiserror = "1.0.38"
 sp-core = "21.0.0"
+bytes = { version = "1.2.1", features = ["serde"]}
 
 [features]
 default = ["native"]

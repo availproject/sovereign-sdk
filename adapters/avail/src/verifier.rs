@@ -1,12 +1,9 @@
-use crate::spec::DaLayerSpec;
 use serde::{Deserialize, Serialize};
-use sov_rollup_interface::{
-    crypto::SimpleHasher,
-    da::{DaSpec, DaVerifier},
-    traits::{BlockHeaderTrait, CanonicalHash},
-    zk::traits::ValidityCondition,
-};
+use sov_rollup_interface::da::{BlockHeaderTrait, DaSpec, DaVerifier};
+use sov_rollup_interface::zk::ValidityCondition;
 use thiserror::Error;
+
+use crate::spec::DaLayerSpec;
 
 #[derive(Error, Debug)]
 pub enum ValidityConditionError {

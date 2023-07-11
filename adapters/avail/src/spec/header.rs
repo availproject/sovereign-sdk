@@ -1,8 +1,9 @@
-use super::hash::AvailHash;
 use avail_subxt::primitives::Header;
 use serde::{Deserialize, Serialize};
-use sov_rollup_interface::traits::{BlockHeaderTrait, CanonicalHash};
+use sov_rollup_interface::da::BlockHeaderTrait;
 use subxt::utils::H256;
+
+use super::hash::AvailHash;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct AvailHeader {
@@ -26,12 +27,8 @@ impl BlockHeaderTrait for AvailHeader {
     fn prev_hash(&self) -> Self::Hash {
         AvailHash(self.header.parent_hash)
     }
-}
 
-impl CanonicalHash for AvailHeader {
-    type Output = AvailHash;
-
-    fn hash(&self) -> Self::Output {
+    fn hash(&self) -> Self::Hash {
         self.hash.clone()
     }
 }
