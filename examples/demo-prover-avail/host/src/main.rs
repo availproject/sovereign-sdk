@@ -15,8 +15,7 @@ use sov_modules_api::RpcRunner;
 use sov_rollup_interface::services::da::{DaService, SlotData};
 use sov_rollup_interface::services::stf_runner::StateTransitionRunner;
 use sov_rollup_interface::stf::StateTransitionFunction;
-use sov_rollup_interface::traits::CanonicalHash;
-use sov_rollup_interface::zk::traits::ZkvmHost;
+use sov_rollup_interface::zk::ZkvmHost;
 use sov_state::Storage;
 use std::env;
 
@@ -107,7 +106,7 @@ async fn main() -> Result<(), anyhow::Error> {
         );
 
         let filtered_block = da_service.get_finalized_at(height).await?;
-        let header_hash = hex::encode(filtered_block.header().hash());
+        let header_hash = hex::encode(filtered_block.header.header.hash());
         host.write_to_guest(&filtered_block.header);
         let (blob_txs, inclusion_proof, completeness_proof) =
             da_service.extract_relevant_txs_with_proof(&filtered_block);

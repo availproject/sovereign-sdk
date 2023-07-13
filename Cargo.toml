@@ -10,9 +10,10 @@ members = [
     "examples/demo-rollup",
     "examples/demo-rollup-avail",
     "examples/demo-nft-module",
+    "examples/demo-sequencer-avail",
     "full-node/db/sov-db",
     "full-node/sov-sequencer",
-    
+
     "module-system/sov-modules-stf-template",
     "module-system/sov-modules-macros",
     "module-system/sov-state",

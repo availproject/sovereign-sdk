@@ -4,7 +4,7 @@ start_height = 2
 
 [da]
 light_client_url = "http://127.0.0.1:7000"
-node_client_url = "ws://127.0.0.1:9944"
+node_client_url = "wss://kate.avail.tools:443/ws"
 
 [runner.storage]
 # The path to the rollup's data directory. Paths that do not begin with `/` are interpreted as relative paths.
