@@ -27,7 +27,11 @@ create-new-key: check-container-running
 	@docker run -it --pull=always docker.io/parity/subkey:latest generate --output-type json > seed-phrase.json
 
 update-da-address: 
+ifeq ($(shell uname -s),Darwin)
 	@sed -i '' 's/^\(sequencer_da_address = \)"[^"]*"/\1"$(shell cat seed-phrase.json | grep -o '"publicKey": *"[^"]*"' | cut -d '"' -f 4 | cut -c3-)"/' rollup_config.toml
+else
+	@sed -i 's/^\(sequencer_da_address = \)"[^"]*"/\1"$(shell cat seed-phrase.json | grep -o '"publicKey": *"[^"]*"' | cut -d '"' -f 4 | cut -c3-)"/' rollup_config.toml
+endif
 
 create-new-app-key:
 	@cd ../../avail-helper/ && cargo run --bin create_app_id -- --ws_uri wss://kate.avail.tools:443/ws --seed $(SEED_PHRASE)
