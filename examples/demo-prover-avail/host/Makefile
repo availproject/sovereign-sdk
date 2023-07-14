@@ -19,7 +19,8 @@ SEED_PHRASE := $(shell cat seed-phrase.json | grep -o '"secretPhrase": *"[^"]*"'
 endif
 
 key-exists: 
-	@command test -s seed-phrase.json && make update-da-address || make create-new-key && make update-da-address
+	@test -s seed-phrase.json || make create-new-key && make update-da-address
+	@make update-da-address
 
 create-new-key: check-container-running
 	@echo "Creating new key..."
