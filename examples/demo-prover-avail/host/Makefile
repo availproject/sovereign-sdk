@@ -1,11 +1,10 @@
 .PHONY: start start-existing start-new config submit-txn build-docker-image
 
 CONTAINER_NAME=avail-light
-VALIDATOR_ADDRESS=celestia1w7wcupk5gswj25c0khnkey5fwmlndx6t5aarmk
 IMAGE_NAME=avail-light
 TEST_PRIVATE_KEY_PATH=../../demo-stf/src/sov-cli/test_data/minter_private_key.json
 SOV_CLI_REL_PATH=../../../target/debug/sov-cli
-SEED_PHRASE=seed-phrase.json
+APP_ID=7
 
 ifndef SERIALIZED_BLOB_PATH
 CONTENT :=
@@ -13,18 +12,24 @@ else
 CONTENT := $(shell cat $(SERIALIZED_BLOB_PATH))
 endif
 
+ifeq ($(shell cat -s seed-phrase.json),)
+SEED_PHRASE :=
+else
+SEED_PHRASE := $(shell cat seed-phrase.json | jq -r '.secretPhrase')
+endif
+
 key-exists: 
-	@command test -s seed-phrase.json || make create-new-key
-
-app-id-exists: 
-	@command test -s app-id.json || make create-new-app-key
-
-create-new-app-key: 
-	cd ../../avail-helper/ && cargo run --bin create_app_id -- --ws_uri wss://kate.avail.tools:443/ws --seed 'rose label choose orphan garlic upset scout payment first have boil stamp'
+	@command test -s seed-phrase.json || make create-new-key && make update-da-address
 
 create-new-key: check-container-running
 	@echo "Creating new key..."
 	@docker run -it --pull=always docker.io/parity/subkey:latest generate --output-type json > seed-phrase.json
+
+update-da-address: 
+	@sed -i '' 's/^\(sequencer_da_address = \)"[^"]*"/\1"$(shell cat seed-phrase.json | jq -r '.publicKey' | cut -c3-)"/' rollup_config.toml
+
+create-new-app-key:
+	@cd ../../avail-helper/ && cargo run --bin create_app_id -- --ws_uri wss://kate.avail.tools:443/ws --seed $(SEED_PHRASE)
 	
 check-docker:
 	@command -v docker > /dev/null 2>&1 || { echo "Docker is not installed"; exit 1; }
@@ -38,7 +43,7 @@ check-container-exists:
 	@docker ps -a --format '{{.Names}}' | grep -w $(CONTAINER_NAME) > /dev/null 2>&1
 
 build-docker-image:
-	@docker build --platform linux/amd64 --build-arg NODE_CLIENT_URL=$$(grep -oE 'node_client_url = "(.*)"$$' rollup_config.toml | awk -F'"' '{print $$2}') --build-arg APP_ID=7 -t avail-light .
+	@docker build --platform linux/amd64 --build-arg NODE_CLIENT_URL=$$(grep -oE 'node_client_url = "(.*)"$$' rollup_config.toml | awk -F'"' '{print $$2}') --build-arg APP_ID=$(APP_ID) -t avail-light .
 
 check-image-exists:
 	@if docker images $(IMAGE_NAME) | awk '{print $$1}' | grep -q $(IMAGE_NAME); then \
@@ -75,7 +80,7 @@ ifndef SERIALIZED_BLOB_PATH
 else ifeq ($(wildcard $(SERIALIZED_BLOB_PATH)),)
 	$(error The file $(SERIALIZED_BLOB_PATH) does not exist)
 else
-	cd ../../avail-helper/ && cargo run --bin submit_tx -- --ws_uri wss://kate.avail.tools:443/ws --tx_blob $(CONTENT) --app_id 7 --seed 'rose label choose orphan garlic upset scout payment first have boil stamp'
+	@cd ../../avail-helper/ && cargo run --bin submit_tx -- --ws_uri wss://kate.avail.tools:443/ws --tx_blob $(CONTENT) --app_id $(APP_ID) --seed $(SEED_PHRASE)
 endif
 
 build-sov-cli:

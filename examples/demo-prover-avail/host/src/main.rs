@@ -32,15 +32,12 @@ use tracing::{info, Level, debug};
 /// const SEQUENCER_DA_ADDRESS: &str = "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
 /// ```
 
-const SEQUENCER_DA_ADDRESS: &str =
-    "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
-
-pub fn get_genesis_config() -> GenesisConfig<DefaultContext> {
+pub fn get_genesis_config(sequencer_da_address: &str) -> GenesisConfig<DefaultContext> {
     let sequencer_private_key = DefaultPrivateKey::generate();
     create_demo_genesis_config(
         100000000,
         sequencer_private_key.default_address(),
-        hex::decode(SEQUENCER_DA_ADDRESS).unwrap(),
+        hex::decode(sequencer_da_address).unwrap(),
         &sequencer_private_key,
         &sequencer_private_key,
     )
@@ -81,7 +78,7 @@ async fn main() -> Result<(), anyhow::Error> {
         // Check if the rollup has previously been initialized
         if is_storage_empty {
             info!("No history detected. Initializing chain...");
-            demo.init_chain(get_genesis_config());
+            demo.init_chain(get_genesis_config(&rollup_config.sequencer_da_address));
             info!("Chain initialization is done.");
         } else {
             info!("Chain is already initialized. Skipping initialization");
