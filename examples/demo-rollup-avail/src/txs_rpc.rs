@@ -1,10 +1,11 @@
-use jsonrpsee::RpcModule;
+use std::sync::{Arc, Mutex};
+
 // use serde::de::DeserializeOwned;
 // use serde::Serialize;
 use anyhow::anyhow;
+use jsonrpsee::RpcModule;
 use sov_rollup_interface::services::batch_builder::BatchBuilder;
 use sov_rollup_interface::services::da::DaService;
-use std::sync::{Arc, Mutex};
 
 /// Single data structure that manages mempool and batch producing.
 pub struct TxsRpcHandler<B: BatchBuilder, T: DaService> {
@@ -72,15 +73,17 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::future::Future;
+    use std::pin::Pin;
+    use std::sync::Arc;
+
     use anyhow::bail;
     use sov_rollup_interface::da::DaSpec;
     use sov_rollup_interface::mocks::{
         MockAddress, TestBlob, TestBlock, TestBlockHeader, TestHash,
     };
-    use std::future::Future;
-    use std::pin::Pin;
-    use std::sync::Arc;
+
+    use super::*;
 
     struct MockDaService {
         submitted: Arc<Mutex<Vec<Vec<u8>>>>,

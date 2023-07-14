@@ -1,16 +1,16 @@
 #[cfg(feature = "native")]
 use avail_subxt::primitives::Header as SubxtHeader;
+use primitive_types::H256;
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::da::BlockHeaderTrait;
-use primitive_types::H256;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Header {
-	pub parent_hash: H256,
-	pub number: u32,
-	pub state_root: H256,
-	pub extrinsics_root: H256,
+    pub parent_hash: H256,
+    pub number: u32,
+    pub state_root: H256,
+    pub extrinsics_root: H256,
 }
 
 use super::hash::AvailHash;
@@ -28,9 +28,9 @@ impl AvailHeader {
         Self {
             hash: AvailHash(hash),
             header: Header {
-                parent_hash: header.parent_hash, 
-                number: header.number, 
-                state_root: header.state_root, 
+                parent_hash: header.parent_hash,
+                number: header.number,
+                state_root: header.state_root,
                 extrinsics_root: header.extrinsics_root,
             },
         }

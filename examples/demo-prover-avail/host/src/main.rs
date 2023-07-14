@@ -1,14 +1,14 @@
 mod config;
 
+use std::env;
+
 use anyhow::Context;
-use crate::config::RollupConfig;
 use demo_stf::app::{DefaultContext, DefaultPrivateKey, NativeAppRunner};
 use demo_stf::genesis_config::create_demo_genesis_config;
-use demo_stf::runner_config::from_toml_path;
-use demo_stf::runner_config::Config as RunnerConfig;
+use demo_stf::runner_config::{from_toml_path, Config as RunnerConfig};
 use demo_stf::runtime::GenesisConfig;
-use presence::service::DaProvider as AvailDaProvider;
 use methods::{ROLLUP_ELF, ROLLUP_ID};
+use presence::service::DaProvider as AvailDaProvider;
 use risc0_adapter::host::Risc0Host;
 use serde::Deserialize;
 use sov_modules_api::RpcRunner;
@@ -17,9 +17,9 @@ use sov_rollup_interface::services::stf_runner::StateTransitionRunner;
 use sov_rollup_interface::stf::StateTransitionFunction;
 use sov_rollup_interface::zk::ZkvmHost;
 use sov_state::Storage;
-use std::env;
+use tracing::{debug, info, Level};
 
-use tracing::{info, Level, debug};
+use crate::config::RollupConfig;
 
 /// Configure our rollup with a centralized sequencer using the SEQUENCER_DA_ADDRESS
 /// address constant. Since the centralize sequencer's address is consensus critical,
@@ -43,7 +43,6 @@ pub fn get_genesis_config(sequencer_da_address: &str) -> GenesisConfig<DefaultCo
     )
 }
 
-
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     // Initializing logging
@@ -61,8 +60,8 @@ async fn main() -> Result<(), anyhow::Error> {
         from_toml_path(&rollup_config_path).context("Failed to read rollup configuration")?;
 
     let node_client = presence::build_client(rollup_config.da.node_client_url.to_string(), false)
-    .await
-    .unwrap();
+        .await
+        .unwrap();
     let light_client_url = rollup_config.da.light_client_url.to_string();
     // Initialize the Avail service using the DaService interface
     let da_service = AvailDaProvider {

@@ -5,33 +5,33 @@ mod ledger_rpc;
 mod test_rpc;
 mod txs_rpc;
 
-use crate::config::RollupConfig;
+use std::env;
+use std::net::SocketAddr;
+use std::sync::Arc;
+
 use anyhow::Context;
-use demo_stf::app::{DefaultContext, DemoBatchReceipt, DemoTxReceipt};
-use demo_stf::app::{DefaultPrivateKey, NativeAppRunner};
+use demo_stf::app::{
+    DefaultContext, DefaultPrivateKey, DemoBatchReceipt, DemoTxReceipt, NativeAppRunner,
+};
 use demo_stf::genesis_config::create_demo_genesis_config;
 use demo_stf::runner_config::from_toml_path;
-use demo_stf::runtime::GenesisConfig;
+use demo_stf::runtime::{get_rpc_methods, GenesisConfig};
 use jsonrpsee::core::server::rpc_module::Methods;
 use presence::service::DaProvider as AvailDaProvider;
 use risc0_adapter::host::Risc0Verifier;
 use sov_db::ledger_db::{LedgerDB, SlotCommit};
+use sov_modules_api::RpcRunner;
 use sov_rollup_interface::crypto::NoOpHasher;
 use sov_rollup_interface::da::{BlobTransactionTrait, DaVerifier};
 use sov_rollup_interface::services::da::{DaService, SlotData};
 use sov_rollup_interface::services::stf_runner::StateTransitionRunner;
 use sov_rollup_interface::stf::StateTransitionFunction;
 use sov_state::Storage;
-use std::env;
-use std::net::SocketAddr;
-use std::sync::Arc;
-use tracing::Level;
-use tracing::{debug, info};
+use tracing::{debug, info, Level};
 
+use crate::config::RollupConfig;
 // RPC related imports
 use crate::txs_rpc::get_txs_rpc;
-use demo_stf::runtime::get_rpc_methods;
-use sov_modules_api::RpcRunner;
 
 pub fn initialize_ledger(path: impl AsRef<std::path::Path>) -> LedgerDB {
     LedgerDB::with_path(path).expect("Ledger DB failed to open")

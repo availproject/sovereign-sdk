@@ -1,15 +1,15 @@
-use reqwest::header::CONTENT_TYPE;
-use sov_db::ledger_db::{LedgerDB, SlotCommit};
 use std::net::SocketAddr;
 
+use reqwest::header::CONTENT_TYPE;
+use sov_db::ledger_db::{LedgerDB, SlotCommit};
 #[cfg(test)]
 use sov_rollup_interface::mocks::{TestBlock, TestBlockHeader, TestHash};
-
 use sov_rollup_interface::stf::{BatchReceipt, Event, TransactionReceipt};
 use tendermint::crypto::Sha256;
 use tokio::sync::oneshot;
 
-use crate::{config::RpcConfig, ledger_rpc};
+use crate::config::RpcConfig;
+use crate::ledger_rpc;
 
 async fn query_test_helper(data: String, expected: &str, rpc_config: RpcConfig) {
     let (addr, port) = (rpc_config.bind_host, rpc_config.bind_port);

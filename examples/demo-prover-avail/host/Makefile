@@ -34,7 +34,7 @@ else
 endif
 
 create-new-app-key:
-	@cd ../../avail-helper/ && cargo run --bin create_app_id -- --ws_uri wss://kate.avail.tools:443/ws --seed $(SEED_PHRASE)
+	@cd ../../avail-helper/ && cargo run --bin create_app_id -- --ws_uri wss://kate.avail.tools:443/ws --seed "$(SEED_PHRASE)"
 	
 check-docker:
 	@command -v docker > /dev/null 2>&1 || { echo "Docker is not installed"; exit 1; }
@@ -85,7 +85,7 @@ ifndef SERIALIZED_BLOB_PATH
 else ifeq ($(wildcard $(SERIALIZED_BLOB_PATH)),)
 	$(error The file $(SERIALIZED_BLOB_PATH) does not exist)
 else
-	@cd ../../avail-helper/ && cargo run --bin submit_tx -- --ws_uri wss://kate.avail.tools:443/ws --tx_blob $(CONTENT) --app_id $(APP_ID) --seed $(SEED_PHRASE)
+	@cd ../../avail-helper/ && cargo run --bin submit_tx -- --ws_uri wss://kate.avail.tools:443/ws --tx_blob $(CONTENT) --app_id $(APP_ID) --seed "$(SEED_PHRASE)"
 endif
 
 build-sov-cli:

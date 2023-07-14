@@ -3,14 +3,12 @@ use avail_subxt::{
     api::runtime_types::{da_control::pallet::Call, da_runtime::RuntimeCall::DataAvailability},
     primitives::AppUncheckedExtrinsic,
 };
+use bytes::Bytes;
 #[cfg(feature = "native")]
 use codec::Encode;
-use serde::{Deserialize, Serialize};
-use sov_rollup_interface::{
-    da::{BlobTransactionTrait, CountedBufReader},
-};
 use primitive_types::H256;
-use bytes::Bytes;
+use serde::{Deserialize, Serialize};
+use sov_rollup_interface::da::{BlobTransactionTrait, CountedBufReader};
 
 use super::address::AvailAddress;
 

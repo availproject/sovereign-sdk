@@ -4,7 +4,7 @@ use serde::Deserialize;
 //TODO - replace with runtime config.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct DaServiceConfig {
-    pub light_client_url: String, 
+    pub light_client_url: String,
     pub node_client_url: String,
 }
 
