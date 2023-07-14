@@ -3,8 +3,8 @@
 CONTAINER_NAME=avail-light
 VALIDATOR_ADDRESS=celestia1w7wcupk5gswj25c0khnkey5fwmlndx6t5aarmk
 IMAGE_NAME=avail-light
-TEST_PRIVATE_KEY_PATH=../demo-stf/src/sov-cli/test_data/minter_private_key.json
-SOV_CLI_REL_PATH=../../target/debug/sov-cli
+TEST_PRIVATE_KEY_PATH=../../demo-stf/src/sov-cli/test_data/minter_private_key.json
+SOV_CLI_REL_PATH=../../../../target/debug/sov-cli
 SEED_PHRASE=seed-phrase.json
 
 ifndef SERIALIZED_BLOB_PATH
@@ -17,11 +17,14 @@ key-exists:
 	@command test -s seed-phrase.json || make create-new-key
 
 app-id-exists: 
-	@command test -s ap
+	@command test -s app-id.json || make create-new-app-key
+
+create-new-app-key: 
+	cd ../../avail-helper/ && cargo run --bin create_app_id -- --ws_uri wss://kate.avail.tools:443/ws --seed 'rose label choose orphan garlic upset scout payment first have boil stamp'
 
 create-new-key: check-container-running
 	@echo "Creating new key..."
-	@docker run -it --pull=always docker.io/parity/subkey:latest generate --output-type json > seed-phrase.json) 
+	@docker run -it --pull=always docker.io/parity/subkey:latest generate --output-type json > seed-phrase.json
 	
 check-docker:
 	@command -v docker > /dev/null 2>&1 || { echo "Docker is not installed"; exit 1; }
@@ -50,7 +53,7 @@ start-existing:
 
 start-new:
 	@echo "Starting new container: $(CONTAINER_NAME)"
-	docker run -d --platform linux/aarch64 --name $(CONTAINER_NAME) -t $(IMAGE_NAME)
+	docker run -d --platform linux/aarch64 -p 7000:7000 --name $(CONTAINER_NAME) -t $(IMAGE_NAME)
 
 start-container: check-image-exists
 	@$(MAKE) check-container-running || { $(MAKE) check-container-exists && $(MAKE) start-existing || $(MAKE) start-new; }
@@ -72,21 +75,21 @@ ifndef SERIALIZED_BLOB_PATH
 else ifeq ($(wildcard $(SERIALIZED_BLOB_PATH)),)
 	$(error The file $(SERIALIZED_BLOB_PATH) does not exist)
 else
-	cd ../avail-helper/
-	@cargo run -- --ws_uri wss://kate.avail.tools:443/ws --tx_blob $(CONTENT)
+	cd ../../avail-helper/ && cargo run create_app_id 
+	@cargo run --bin submit_tx -- --ws_uri wss://kate.avail.tools:443/ws --tx_blob $(CONTENT) --app_id 7 --seed 'rose label choose orphan garlic upset scout payment first have boil stamp'
 endif
 
 build-sov-cli:
-	cd ../demo-stf && cargo build --bin sov-cli
+	cd ../../demo-stf && cargo build --bin sov-cli
 
 test-serialize-create-token: check-container-running build-sov-cli
-	$(SOV_CLI_REL_PATH) serialize-call ../demo-stf/src/sov-cli/test_data/token_deployer_private_key.json Bank ../demo-stf/src/sov-cli/test_data/create_token.json 0
+	$(SOV_CLI_REL_PATH) serialize-call ../../demo-stf/src/sov-cli/test_data/token_deployer_private_key.json Bank ../../demo-stf/src/sov-cli/test_data/create_token.json 0
 
 test-build-blob-from-create-token: test-serialize-create-token
-	$(SOV_CLI_REL_PATH) make-blob ../demo-stf/src/sov-cli/test_data/create_token.dat > ../demo-stf/src/sov-cli/test_data/test_blob.dat
+	$(SOV_CLI_REL_PATH) make-blob ../../demo-stf/src/sov-cli/test_data/create_token.dat > ../../demo-stf/src/sov-cli/test_data/test_blob.dat
 
 test-create-token: test-build-blob-from-create-token
-	$(MAKE) submit-txn SERIALIZED_BLOB_PATH=../demo-stf/src/sov-cli/test_data/test_blob.dat
+	$(MAKE) submit-txn SERIALIZED_BLOB_PATH=../../demo-stf/src/sov-cli/test_data/test_blob.dat
 
 clean-rollup-db:
 	$(eval path := ./$(shell awk -F'=' '/^path/ {print $$2}' rollup_config.toml | tr -d '[:space:]"\n'))

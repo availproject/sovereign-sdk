@@ -45,14 +45,15 @@ struct Opts {
 	/// Check whether the Client you are using is aligned with the statically generated codegen.
 	#[structopt(name = "validate_codege", short = "c", long)]
 	pub validate_codegen: bool,
+    
+	#[structopt(name = "seed", long, default_value = "rose label choose orphan garlic upset scout payment first have boil stamp")]
+	pub seed: String,
 
-	#[structopt(name = "app_name", long, default_value = "example")]
-	pub app_name: String
-}
+	#[structopt(name = "app_id", long, default_value = "0")]
+	pub app_id: u32,
 
-#[derive(Serialize, Deserialize)]
-struct AppIdResult {
-	app_id: u32
+	#[structopt(name = "tx_blob", long, default_value = "example")]
+	pub tx_blob: HexData
 }
 
 /// This example submits an Avail data extrinsic, then retrieves the block containing the
@@ -60,36 +61,51 @@ struct AppIdResult {
 #[async_std::main]
 async fn main() -> Result<()> {
 	let args = Opts::from_args();
+	println!("{}", args.ws);
 
-	let pair = Pair::from_phrase(SEED_PHRASE, None).unwrap();
+    let pair = Pair::from_phrase(SEED_PHRASE, None).unwrap();
 	let signer = PairSigner::<AvailConfig, sr25519::Pair>::new(pair.0.clone());
+	println!("{}", pair.0.clone().public());
 
 	let client = build_client(args.ws, args.validate_codegen).await?;
+	let example_data = args.tx_blob.0;
 
-	let app_id = {
-		let query = api::storage().data_availability().next_app_id();
-		let next_app_id = client.storage().at(None).await?.fetch(&query).await?.unwrap();
-		let create_application_key = api::tx()
-				.data_availability()
-				.create_application_key(BoundedVec(next_app_id.0.to_le_bytes().to_vec()));
+	println!("app id is: {}", args.app_id);
 
-		let params = AvailExtrinsicParams::default();
+    let data_transfer = api::tx()
+		.data_availability()
+		.submit_data(BoundedVec(example_data.clone()));
+	let extrinsic_params = AvailExtrinsicParams::new_with_app_id(args.app_id.into());
 
-		let res = client
-				.tx()
-				.sign_and_submit_then_watch(&create_application_key, &signer, params)
-				.await?
-				.wait_for_finalized_success()
-				.await?;
+	let h = client
+		.tx()
+		.sign_and_submit_then_watch(&data_transfer, &signer, extrinsic_params)
+		.await?
+		.wait_for_finalized_success()
+		.await?;
 
-		next_app_id.0
-	};
-	
-	println!("{}", serde_json::to_string(
-		&AppIdResult {
-			app_id
-		}
-	).unwrap());
+	println!("receipt {:#?}", h.extrinsic_hash());
+
+	let submitted_block = client.rpc().block(Some(h.block_hash())).await?.unwrap();
+
+	let matched_xt = submitted_block
+		.block
+		.extrinsics
+		.into_iter()
+		.filter_map(|chain_block_ext| {
+			AppUncheckedExtrinsic::try_from(chain_block_ext)
+				.map(|ext| ext.function)
+				.ok()
+		})
+		.find(|call| match call {
+			Call::DataAvailability(da_call) => match da_call {
+				DaCall::submit_data { data } => data.0 == example_data,
+				_ => false,
+			},
+			_ => false,
+		});
+
+	assert!(matched_xt.is_some(), "Submitted data not found");
 
 	Ok(())
 }
