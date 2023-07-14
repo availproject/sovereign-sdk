@@ -81,7 +81,7 @@ fn state_transition(
         validity_condition,
     };
     env::commit(&output);
-    env::write(&"new state root committeddd\n");
+    env::write(&"New state root committed\n");
 }
 
 #[test]

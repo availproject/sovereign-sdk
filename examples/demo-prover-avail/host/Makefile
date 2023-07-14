@@ -4,7 +4,7 @@ CONTAINER_NAME=avail-light
 VALIDATOR_ADDRESS=celestia1w7wcupk5gswj25c0khnkey5fwmlndx6t5aarmk
 IMAGE_NAME=avail-light
 TEST_PRIVATE_KEY_PATH=../../demo-stf/src/sov-cli/test_data/minter_private_key.json
-SOV_CLI_REL_PATH=../../../../target/debug/sov-cli
+SOV_CLI_REL_PATH=../../../target/debug/sov-cli
 SEED_PHRASE=seed-phrase.json
 
 ifndef SERIALIZED_BLOB_PATH
@@ -38,7 +38,7 @@ check-container-exists:
 	@docker ps -a --format '{{.Names}}' | grep -w $(CONTAINER_NAME) > /dev/null 2>&1
 
 build-docker-image:
-	@docker build --platform linux/aarch64 --build-arg NODE_CLIENT_URL=$$(grep -oE 'node_client_url = "(.*)"$$' rollup_config.toml | awk -F'"' '{print $$2}') --build-arg APP_ID=7 -t avail-light .
+	@docker build --platform linux/amd64 --build-arg NODE_CLIENT_URL=$$(grep -oE 'node_client_url = "(.*)"$$' rollup_config.toml | awk -F'"' '{print $$2}') --build-arg APP_ID=7 -t avail-light .
 
 check-image-exists:
 	@if docker images $(IMAGE_NAME) | awk '{print $$1}' | grep -q $(IMAGE_NAME); then \
@@ -53,7 +53,7 @@ start-existing:
 
 start-new:
 	@echo "Starting new container: $(CONTAINER_NAME)"
-	docker run -d --platform linux/aarch64 -p 7000:7000 --name $(CONTAINER_NAME) -t $(IMAGE_NAME)
+	docker run -d --platform linux/amd64 -p 8000:7000 --name $(CONTAINER_NAME) -t $(IMAGE_NAME)
 
 start-container: check-image-exists
 	@$(MAKE) check-container-running || { $(MAKE) check-container-exists && $(MAKE) start-existing || $(MAKE) start-new; }
@@ -75,8 +75,7 @@ ifndef SERIALIZED_BLOB_PATH
 else ifeq ($(wildcard $(SERIALIZED_BLOB_PATH)),)
 	$(error The file $(SERIALIZED_BLOB_PATH) does not exist)
 else
-	cd ../../avail-helper/ && cargo run create_app_id 
-	@cargo run --bin submit_tx -- --ws_uri wss://kate.avail.tools:443/ws --tx_blob $(CONTENT) --app_id 7 --seed 'rose label choose orphan garlic upset scout payment first have boil stamp'
+	cd ../../avail-helper/ && cargo run --bin submit_tx -- --ws_uri wss://kate.avail.tools:443/ws --tx_blob $(CONTENT) --app_id 7 --seed 'rose label choose orphan garlic upset scout payment first have boil stamp'
 endif
 
 build-sov-cli:

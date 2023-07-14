@@ -16,10 +16,11 @@ ARG NODE_CLIENT_URL
 ARG APP_ID
 
 RUN curl -L https://availproject.github.io/configs/kate/avail-light-1.4.3/config.yaml --output config.yaml && \
-    curl -L https://github.com/availproject/avail-light/releases/download/v1.4.4/avail-light-linux-aarch64.tar.gz --output avail-light-linux-aarch64.tar.gz && \
-    tar -xf avail-light-linux-aarch64.tar.gz && \
+    curl -L https://github.com/availproject/avail-light/releases/download/v1.4.4/avail-light-linux-amd64.tar.gz --output avail-light-linux-amd64.tar.gz && \
+    tar -xf avail-light-linux-amd64.tar.gz && \
 		echo "app_id = ${APP_ID}" >> config.yaml && \
-		sed -i "s#full_node_ws = .*#full_node_ws = ['$NODE_CLIENT_URL']#" config.yaml
+        sed -i "s#full_node_ws = .*#full_node_ws = ['$NODE_CLIENT_URL']#" config.yaml && \
+        sed -i "s#http_server_host = .*#http_server_host = '0.0.0.0'#" config.yaml
 
 ENV \
     APP_ID=0
@@ -36,4 +37,4 @@ LABEL \
     org.opencontainers.image.title="Avail Light Client" \
     org.opencontainers.image.description="Data Availability Docker Node"
 
-CMD ls; cat config.yaml; ./avail-light-linux-aarch64
+CMD ls; cat config.yaml; ./avail-light-linux-amd64
