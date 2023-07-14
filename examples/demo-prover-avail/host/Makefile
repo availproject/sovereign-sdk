@@ -15,18 +15,18 @@ endif
 ifeq ($(shell cat -s seed-phrase.json),)
 SEED_PHRASE :=
 else
-SEED_PHRASE := $(shell cat seed-phrase.json | jq -r '.secretPhrase')
+SEED_PHRASE := $(shell cat seed-phrase.json | grep -o '"secretPhrase": *"[^"]*"' | cut -d '"' -f 4)
 endif
 
 key-exists: 
-	@command test -s seed-phrase.json || make create-new-key && make update-da-address
+	@command test -s seed-phrase.json && make update-da-address || make create-new-key && make update-da-address
 
 create-new-key: check-container-running
 	@echo "Creating new key..."
 	@docker run -it --pull=always docker.io/parity/subkey:latest generate --output-type json > seed-phrase.json
 
 update-da-address: 
-	@sed -i '' 's/^\(sequencer_da_address = \)"[^"]*"/\1"$(shell cat seed-phrase.json | jq -r '.publicKey' | cut -c3-)"/' rollup_config.toml
+	@sed -i '' 's/^\(sequencer_da_address = \)"[^"]*"/\1"$(shell cat seed-phrase.json | grep -o '"publicKey": *"[^"]*"' | cut -d '"' -f 4 | cut -c3-)"/' rollup_config.toml
 
 create-new-app-key:
 	@cd ../../avail-helper/ && cargo run --bin create_app_id -- --ws_uri wss://kate.avail.tools:443/ws --seed $(SEED_PHRASE)
