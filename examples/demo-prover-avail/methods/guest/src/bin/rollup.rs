@@ -25,13 +25,11 @@ risc0_zkvm::guest::entry!(main);
 //  5. Call end_slot
 //  6. Output (Da hash, start_root, end_root, event_root)
 pub fn main() {
-    env::write(&"Start guest\n");
     // TODO: Remove this
     // info!("Should not be printed from guest");
     let guest = Risc0Guest;
-    env::write(&"Start guest 2\n");
     let verifier = presence::verifier::Verifier {};
-    env::write(&"Start guest 3\n");
+    
     // Step 1: read tx list
     let header: <DaLayerSpec as DaSpec>::BlockHeader = guest.read_from_host();
     env::write(&"header read\n");

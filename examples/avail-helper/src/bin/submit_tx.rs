@@ -75,7 +75,7 @@ async fn main() -> Result<()> {
         .wait_for_finalized_success()
         .await?;
 
-    println!("receipt {:#?}", h.extrinsic_hash());
+    println!("receipt hash{:#?}", h.extrinsic_hash());
 
     let submitted_block = client.rpc().block(Some(h.block_hash())).await?.unwrap();
 
