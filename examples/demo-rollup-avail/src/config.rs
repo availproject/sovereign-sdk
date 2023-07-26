@@ -18,6 +18,7 @@ pub struct DaServiceConfig {
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RollupConfig {
     pub start_height: u64,
+    pub sequencer_da_address: String,
     pub da: DaServiceConfig,
     pub runner: RunnerConfig,
     pub rpc_config: RpcConfig,
