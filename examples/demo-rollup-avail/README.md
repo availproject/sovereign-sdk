@@ -18,7 +18,7 @@ understand how to build your own state transition function, check out at the doc
 
 ### Prerequisites
 1. Ensure that Docker is installed on your system.
-2. Obtain the Avail Faucet link from the following Discord server: [Avail Discord Server](https://discord.gg/6ZzVSk6YB2). This link will help you fund your Avail address.
+2. Join the following Discord server to use avail faucet: [Avail Discord Server](https://discord.gg/6ZzVSk6YB2). This link will help you fund your Avail address.
 
 ### Getting Started
 1. Check docker is installed, and run `make start`.
