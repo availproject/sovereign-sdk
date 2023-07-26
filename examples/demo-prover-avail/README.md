@@ -16,8 +16,9 @@ harder to follow at first glance, so we recommend diving into the `demo-rollup` 
 
 ## Getting Started
 
-1. Make sure Celestia light node is running as described in [Demo Rollup README](../demo-rollup/README.md).
+1. Make sure all pre requisites are completed as described in [Demo Rollup README](../demo-rollup/README.md).
 2. Execute `cargo run`.
+3. Execute `make test-create-token`, to test a transaction.
 
 ## Development
 
