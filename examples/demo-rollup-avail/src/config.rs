@@ -11,13 +11,14 @@ pub struct RpcConfig {
 //TODO - replace with runtime config.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct DaServiceConfig {
-    pub light_client_url: String, 
-    pub node_client_url: String
+    pub light_client_url: String,
+    pub node_client_url: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RollupConfig {
     pub start_height: u64,
+    pub sequencer_da_address: String,
     pub da: DaServiceConfig,
     pub runner: RunnerConfig,
     pub rpc_config: RpcConfig,
@@ -25,12 +26,13 @@ pub struct RollupConfig {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use demo_stf::runner_config::{from_toml_path, StorageConfig};
     use std::io::Write;
     use std::path::PathBuf;
+
+    use demo_stf::runner_config::{from_toml_path, StorageConfig};
     use tempfile::NamedTempFile;
+
+    use super::*;
 
     fn create_config_from(content: &str) -> NamedTempFile {
         let mut config_file = NamedTempFile::new().unwrap();

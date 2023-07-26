@@ -1,6 +1,6 @@
+use primitive_types::H256;
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::da::BlockHashTrait;
-use subxt::utils::H256;
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub struct AvailHash(pub H256);
@@ -15,6 +15,6 @@ impl AsRef<[u8]> for AvailHash {
 
 impl AvailHash {
     pub fn inner(&self) -> &[u8; 32] {
-        &self.0.as_fixed_bytes()
+        self.0.as_fixed_bytes()
     }
 }
