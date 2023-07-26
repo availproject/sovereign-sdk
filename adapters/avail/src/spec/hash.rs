@@ -15,6 +15,6 @@ impl AsRef<[u8]> for AvailHash {
 
 impl AvailHash {
     pub fn inner(&self) -> &[u8; 32] {
-        &self.0.as_fixed_bytes()
+        self.0.as_fixed_bytes()
     }
 }

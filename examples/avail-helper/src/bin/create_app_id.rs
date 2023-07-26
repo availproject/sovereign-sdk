@@ -1,18 +1,18 @@
-use std::fs;
+
 use std::str::FromStr;
 
 use anyhow::Result;
-use avail_subxt::api::runtime_types::da_control::pallet::Call as DaCall;
+
 use avail_subxt::api::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 use avail_subxt::api::{self};
-use avail_subxt::avail::AppUncheckedExtrinsic;
+
 use avail_subxt::primitives::AvailExtrinsicParams;
-use avail_subxt::{build_client, AvailConfig, Call};
+use avail_subxt::{build_client, AvailConfig};
 use serde::{Deserialize, Serialize};
-use serde_json::to_vec;
+
 use sp_core::crypto::Pair as PairTrait;
 use sp_keyring::sr25519::sr25519::{self, Pair};
-use sp_keyring::AccountKeyring;
+
 use structopt::StructOpt;
 use subxt::tx::PairSigner;
 
@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
 
         let params = AvailExtrinsicParams::default();
 
-        let res = client
+        let _res = client
             .tx()
             .sign_and_submit_then_watch(&create_application_key, &signer, params)
             .await?

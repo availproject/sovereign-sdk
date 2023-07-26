@@ -1,4 +1,4 @@
-use std::fs;
+
 use std::str::FromStr;
 
 use anyhow::Result;
@@ -8,11 +8,11 @@ use avail_subxt::api::{self};
 use avail_subxt::avail::AppUncheckedExtrinsic;
 use avail_subxt::primitives::AvailExtrinsicParams;
 use avail_subxt::{build_client, AvailConfig, Call};
-use serde::{Deserialize, Serialize};
-use serde_json::to_vec;
+
+
 use sp_core::crypto::Pair as PairTrait;
 use sp_keyring::sr25519::sr25519::{self, Pair};
-use sp_keyring::AccountKeyring;
+
 use structopt::StructOpt;
 use subxt::tx::PairSigner;
 
@@ -34,7 +34,7 @@ struct Opts {
     pub ws: String,
 
     /// Check whether the Client you are using is aligned with the statically generated codegen.
-    #[structopt(name = "validate_codege", short = "c", long)]
+    #[structopt(name = "validate_codegen", short = "c", long)]
     pub validate_codegen: bool,
 
     #[structopt(
