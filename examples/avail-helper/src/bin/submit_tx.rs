@@ -1,4 +1,3 @@
-
 use std::str::FromStr;
 
 use anyhow::Result;
@@ -8,11 +7,8 @@ use avail_subxt::api::{self};
 use avail_subxt::avail::AppUncheckedExtrinsic;
 use avail_subxt::primitives::AvailExtrinsicParams;
 use avail_subxt::{build_client, AvailConfig, Call};
-
-
 use sp_core::crypto::Pair as PairTrait;
 use sp_keyring::sr25519::sr25519::{self, Pair};
-
 use structopt::StructOpt;
 use subxt::tx::PairSigner;
 
@@ -89,10 +85,7 @@ async fn main() -> Result<()> {
                 .ok()
         })
         .find(|call| match call {
-            Call::DataAvailability(da_call) => match da_call {
-                DaCall::submit_data { data } => data.0 == example_data,
-                _ => false,
-            },
+            Call::DataAvailability(DaCall::submit_data { data }) => data.0 == example_data,
             _ => false,
         });
 

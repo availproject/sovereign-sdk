@@ -1,18 +1,13 @@
-
 use std::str::FromStr;
 
 use anyhow::Result;
-
 use avail_subxt::api::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 use avail_subxt::api::{self};
-
 use avail_subxt::primitives::AvailExtrinsicParams;
 use avail_subxt::{build_client, AvailConfig};
 use serde::{Deserialize, Serialize};
-
 use sp_core::crypto::Pair as PairTrait;
 use sp_keyring::sr25519::sr25519::{self, Pair};
-
 use structopt::StructOpt;
 use subxt::tx::PairSigner;
 
