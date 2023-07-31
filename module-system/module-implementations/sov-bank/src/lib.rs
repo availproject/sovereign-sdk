@@ -1,20 +1,24 @@
-pub mod call;
-mod create_token;
-pub mod genesis;
+mod call;
+mod genesis;
 #[cfg(feature = "native")]
-pub mod query;
+mod query;
 mod token;
+mod utils;
 
-pub use create_token::create_token_address;
-use sov_modules_api::Error;
-use sov_modules_macros::ModuleInfo;
+pub use call::CallMessage;
+#[cfg(feature = "native")]
+pub use query::{BalanceResponse, BankRpcImpl, BankRpcServer, TotalSupplyResponse};
+use sov_modules_api::{Error, ModuleInfo};
 use sov_state::WorkingSet;
 use token::Token;
 pub use token::{Amount, Coins};
+pub use utils::{get_genesis_token_address, get_token_address};
 
 pub struct TokenConfig<C: sov_modules_api::Context> {
     pub token_name: String,
     pub address_and_balances: Vec<(C::Address, u64)>,
+    pub authorized_minters: Vec<C::Address>,
+    pub salt: u64,
 }
 
 /// Initial configuration for sov-bank module.
@@ -26,6 +30,7 @@ pub struct BankConfig<C: sov_modules_api::Context> {
 /// - Token creation.
 /// - Token transfers.
 /// - Token burn.
+#[cfg_attr(feature = "native", derive(sov_modules_api::ModuleCallJsonSchema))]
 #[derive(ModuleInfo, Clone)]
 pub struct Bank<C: sov_modules_api::Context> {
     /// The address of the sov-bank module.

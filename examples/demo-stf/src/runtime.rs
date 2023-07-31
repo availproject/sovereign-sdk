@@ -1,19 +1,22 @@
 #[cfg(feature = "native")]
-use sov_accounts::query::{AccountsRpcImpl, AccountsRpcServer};
+use sov_accounts::{AccountsRpcImpl, AccountsRpcServer};
 #[cfg(feature = "native")]
-use sov_bank::query::{BankRpcImpl, BankRpcServer};
+use sov_bank::{BankRpcImpl, BankRpcServer};
 #[cfg(feature = "native")]
-use sov_election::query::{ElectionRpcImpl, ElectionRpcServer};
+use sov_election::{ElectionRpcImpl, ElectionRpcServer};
+#[cfg(feature = "native")]
+#[cfg(feature = "experimental")]
+use sov_evm::query::{EvmRpcImpl, EvmRpcServer};
 #[cfg(feature = "native")]
 pub use sov_modules_api::default_context::DefaultContext;
-use sov_modules_api::Context;
+use sov_modules_api::macros::DefaultRuntime;
 #[cfg(feature = "native")]
-use sov_modules_macros::{cli_parser, expose_rpc};
-use sov_modules_macros::{DefaultRuntime, DispatchCall, Genesis, MessageCodec};
+use sov_modules_api::macros::{expose_rpc, CliWallet};
+use sov_modules_api::{Context, DispatchCall, Genesis, MessageCodec};
 #[cfg(feature = "native")]
-use sov_sequencer_registry::query::{SequencerRegistryRpcImpl, SequencerRegistryRpcServer};
+use sov_sequencer_registry::{SequencerRegistryRpcImpl, SequencerRegistryRpcServer};
 #[cfg(feature = "native")]
-use sov_value_setter::query::{ValueSetterRpcImpl, ValueSetterRpcServer};
+use sov_value_setter::{ValueSetterRpcImpl, ValueSetterRpcServer};
 
 /// The Rollup entrypoint.
 ///
@@ -50,11 +53,8 @@ use sov_value_setter::query::{ValueSetterRpcImpl, ValueSetterRpcServer};
 /// Similar mechanism works for queries with the difference that queries are submitted by users directly to the rollup node
 /// instead of going through the DA layer.
 
-#[cfg_attr(
-    feature = "native",
-    cli_parser(DefaultContext),
-    expose_rpc(DefaultContext)
-)]
+#[cfg(not(feature = "experimental"))]
+#[cfg_attr(feature = "native", derive(CliWallet), expose_rpc(DefaultContext))]
 #[derive(Genesis, DispatchCall, MessageCodec, DefaultRuntime)]
 #[serialization(borsh::BorshDeserialize, borsh::BorshSerialize)]
 pub struct Runtime<C: Context> {
@@ -63,4 +63,18 @@ pub struct Runtime<C: Context> {
     pub election: sov_election::Election<C>,
     pub value_setter: sov_value_setter::ValueSetter<C>,
     pub accounts: sov_accounts::Accounts<C>,
+}
+
+#[cfg(feature = "experimental")]
+#[cfg_attr(feature = "native", derive(CliWallet), expose_rpc(DefaultContext))]
+#[derive(Genesis, DispatchCall, MessageCodec, DefaultRuntime)]
+#[serialization(borsh::BorshDeserialize, borsh::BorshSerialize)]
+pub struct Runtime<C: Context> {
+    pub bank: sov_bank::Bank<C>,
+    pub sequencer_registry: sov_sequencer_registry::SequencerRegistry<C>,
+    pub election: sov_election::Election<C>,
+    pub value_setter: sov_value_setter::ValueSetter<C>,
+    pub accounts: sov_accounts::Accounts<C>,
+    #[cfg_attr(feature = "native", cli_skip)]
+    pub evm: sov_evm::Evm<C>,
 }
