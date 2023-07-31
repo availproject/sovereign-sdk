@@ -4,25 +4,30 @@ pub mod call;
 pub mod evm;
 #[cfg(feature = "experimental")]
 pub mod genesis;
-#[cfg(feature = "experimental")]
 #[cfg(feature = "native")]
+#[cfg(feature = "experimental")]
 pub mod query;
+#[cfg(feature = "experimental")]
+mod receipt;
 #[cfg(feature = "experimental")]
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "experimental")]
 pub use experimental::{AccountData, Evm, EvmConfig};
+#[cfg(feature = "experimental")]
+pub use receipt::TransactionReceipt;
 
 #[cfg(feature = "experimental")]
 mod experimental {
-    use sov_modules_api::Error;
-    use sov_modules_macros::ModuleInfo;
+    use revm::primitives::{KECCAK_EMPTY, U256};
+    use sov_modules_api::{Error, ModuleInfo};
     use sov_state::WorkingSet;
 
     use super::evm::db::EvmDb;
     use super::evm::transaction::BlockEnv;
     use super::evm::{DbAccount, EthAddress};
-    use crate::evm::Bytes32;
+    use crate::evm::{Bytes32, EvmTransaction};
+    use crate::TransactionReceipt;
 
     #[derive(Clone)]
     pub struct AccountData {
@@ -33,12 +38,23 @@ mod experimental {
         pub nonce: u64,
     }
 
+    impl AccountData {
+        pub fn empty_code() -> [u8; 32] {
+            KECCAK_EMPTY.to_fixed_bytes()
+        }
+
+        pub fn balance(balance: u64) -> Bytes32 {
+            U256::from(balance).to_le_bytes()
+        }
+    }
+
     #[derive(Clone)]
     pub struct EvmConfig {
         pub data: Vec<AccountData>,
     }
 
     #[allow(dead_code)]
+    #[cfg_attr(feature = "native", derive(sov_modules_api::ModuleCallJsonSchema))]
     #[derive(ModuleInfo, Clone)]
     pub struct Evm<C: sov_modules_api::Context> {
         #[address]
@@ -49,6 +65,12 @@ mod experimental {
 
         #[state]
         pub(crate) block_env: sov_state::StateValue<BlockEnv>,
+
+        #[state]
+        pub(crate) transactions: sov_state::StateMap<Bytes32, EvmTransaction>,
+
+        #[state]
+        pub(crate) receipts: sov_state::StateMap<Bytes32, TransactionReceipt>,
     }
 
     impl<C: sov_modules_api::Context> sov_modules_api::Module for Evm<C> {

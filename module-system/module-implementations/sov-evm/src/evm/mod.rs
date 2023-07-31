@@ -1,3 +1,4 @@
+use revm::primitives::{ExecutionResult, Output, B160};
 use sov_state::Prefix;
 
 mod conversions;
@@ -11,9 +12,11 @@ pub(crate) mod test_helpers;
 mod tests;
 pub(crate) mod transaction;
 
-pub(crate) type EthAddress = [u8; 20];
+pub type EthAddress = [u8; 20];
 pub(crate) type Bytes32 = [u8; 32];
 
+pub use conversions::prepare_call_env;
+pub use transaction::EvmTransaction;
 // Stores information about an EVM account
 #[derive(borsh::BorshDeserialize, borsh::BorshSerialize, Debug, PartialEq, Clone, Default)]
 pub(crate) struct AccountInfo {
@@ -53,5 +56,15 @@ impl DbAccount {
         let mut prefix = parent_prefix.as_aligned_vec().clone().into_inner();
         prefix.extend_from_slice(&address);
         Prefix::new(prefix)
+    }
+}
+
+pub(crate) fn contract_address(result: ExecutionResult) -> Option<B160> {
+    match result {
+        ExecutionResult::Success {
+            output: Output::Create(_, Some(addr)),
+            ..
+        } => Some(addr),
+        _ => None,
     }
 }
