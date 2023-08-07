@@ -6,6 +6,7 @@ use demo_stf::ArrayWitness;
 use presence::spec::{DaLayerSpec};
 use presence::spec::header::AvailHeader;
 use presence::verifier::Verifier;
+use presence::spec::transaction::AvailBlobTransaction;
 use log::info;
 use risc0_adapter::guest::Risc0Guest;
 use risc0_zkvm::guest::env;
@@ -55,9 +56,10 @@ fn state_transition(
     let prev_state_root_hash: [u8; 32] = guest.read_from_host();
     env::write(&"Prev root hash read\n");
 
-    let mut demo_runner = <ZkAppRunner<Risc0Guest> as StateTransitionRunner<
+    let mut demo_runner = <ZkAppRunner<Risc0Guest, AvailBlobTransaction> as StateTransitionRunner<
         ZkConfig,
         Risc0Guest,
+        AvailBlobTransaction,
     >>::new(prev_state_root_hash);
 
     let demo = demo_runner.inner_mut();
