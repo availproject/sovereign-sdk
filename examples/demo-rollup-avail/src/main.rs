@@ -18,6 +18,7 @@ use demo_stf::runner_config::from_toml_path;
 use demo_stf::runtime::{get_rpc_methods, GenesisConfig};
 use jsonrpsee::core::server::rpc_module::Methods;
 use presence::service::DaProvider as AvailDaProvider;
+use presence::spec::transaction::AvailBlobTransaction;
 use risc0_adapter::host::Risc0Verifier;
 use sov_db::ledger_db::{LedgerDB, SlotCommit};
 use sov_modules_api::RpcRunner;
@@ -103,12 +104,12 @@ async fn main() -> Result<(), anyhow::Error> {
     });
 
     // Our state transition function implements the StateTransitionRunner interface, so we use that to intitialize the STF
-    let mut demo_runner = NativeAppRunner::<Risc0Verifier>::new(rollup_config.runner.clone());
+    let mut demo_runner = NativeAppRunner::<Risc0Verifier, AvailBlobTransaction>::new(rollup_config.runner.clone());
 
     // Our state transition also implements the RpcRunner interface, so we use that to initialize the RPC server.
     let storage = demo_runner.get_storage();
     let is_storage_empty = storage.is_empty();
-    let mut methods = get_rpc_methods(storage);
+    let mut methods = get_rpc_methods::<DefaultContext>(storage);
     let ledger_rpc_module =
         ledger_rpc::get_ledger_rpc::<DemoBatchReceipt, DemoTxReceipt>(ledger_db.clone());
     methods
@@ -169,7 +170,7 @@ async fn main() -> Result<(), anyhow::Error> {
         // The inclusion and completeness proof in the case is not verified by the adapter, but the light client is trusted to have
         // verified it already.
         let (blob_txs, inclusion_proof, completeness_proof) =
-            da_service.extract_relevant_txs_with_proof(&filtered_block);
+            da_service.extract_relevant_txs_with_proof(&filtered_block).await;
         assert!(da_verifier
             .verify_relevant_tx_list::<NoOpHasher>(
                 &header,

@@ -9,6 +9,7 @@ use demo_stf::runner_config::{from_toml_path, Config as RunnerConfig};
 use demo_stf::runtime::GenesisConfig;
 use methods::{ROLLUP_ELF, ROLLUP_ID};
 use presence::service::DaProvider as AvailDaProvider;
+use presence::spec::transaction::AvailBlobTransaction;
 use risc0_adapter::host::Risc0Host;
 use serde::Deserialize;
 use sov_modules_api::RpcRunner;
@@ -69,7 +70,7 @@ async fn main() -> Result<(), anyhow::Error> {
         light_client_url,
     };
 
-    let mut demo_runner = NativeAppRunner::<Risc0Host>::new(rollup_config.runner.clone());
+    let mut demo_runner = NativeAppRunner::<Risc0Host, AvailBlobTransaction>::new(rollup_config.runner.clone());
     let is_storage_empty = demo_runner.get_storage().is_empty();
     let demo = demo_runner.inner_mut();
 
@@ -105,7 +106,7 @@ async fn main() -> Result<(), anyhow::Error> {
         let header_hash = hex::encode(filtered_block.hash());
         host.write_to_guest(&filtered_block.header);
         let (blob_txs, inclusion_proof, completeness_proof) =
-            da_service.extract_relevant_txs_with_proof(&filtered_block);
+            da_service.extract_relevant_txs_with_proof(&filtered_block).await;
 
         host.write_to_guest(&blob_txs);
         host.write_to_guest(&inclusion_proof);
@@ -136,7 +137,7 @@ async fn main() -> Result<(), anyhow::Error> {
         let receipt = host.run().unwrap();
         info!("Start verifying..");
 
-        receipt.verify(&ROLLUP_ID).expect("Receipt should be valid");
+        receipt.verify(ROLLUP_ID).expect("Receipt should be valid");
 
         prev_state_root = next_state_root.0;
         info!("Completed proving and verifying block {height}");
