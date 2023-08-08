@@ -1,5 +1,4 @@
-use demo_stf::runner_config::Config as RunnerConfig;
-//use presence::service::RuntimeConfig;
+use sov_stf_runner::RunnerConfig;
 use serde::Deserialize;
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
