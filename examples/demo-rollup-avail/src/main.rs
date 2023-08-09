@@ -11,17 +11,14 @@ use demo_stf::runtime::{get_rpc_methods, GenesisConfig};
 use presence::service::DaProvider as AvailDaProvider;
 use presence::spec::transaction::AvailBlobTransaction;
 use risc0_adapter::host::Risc0Verifier;
-use sov_db::ledger_db::{LedgerDB, SlotCommit};
-use sov_rollup_interface::crypto::NoOpHasher;
-use sov_rollup_interface::da::{DaVerifier};
-use sov_rollup_interface::services::da::{DaService, SlotData};
-use sov_rollup_interface::stf::StateTransitionFunction;
+use sov_db::ledger_db::{LedgerDB};
+use sov_rollup_interface::services::da::{DaService};
 use sov_modules_stf_template::{SequencerOutcome, TxEffect};
 use sov_sequencer::get_sequencer_rpc;
 use sov_stf_runner::{from_toml_path, get_ledger_rpc, StateTransitionRunner};
 use crate::config::Config;
 use sov_state::Storage;
-use tracing::{debug, info, Level};
+use tracing::{debug, Level};
 
 #[cfg(test)]
 mod test_rpc;
@@ -98,8 +95,6 @@ async fn main() -> Result<(), anyhow::Error> {
     {
         register_ledger(ledger_db.clone(), &mut methods)?;
         register_sequencer(da_service.clone(), &mut app, &mut methods)?;
-        #[cfg(feature = "experimental")]
-        register_ethereum(config.da.clone(), &mut methods)?;
     }
 
     let storage = app.get_storage();
@@ -143,24 +138,4 @@ fn register_ledger(
     methods
         .merge(ledger_rpc)
         .context("Failed to merge ledger RPC modules")
-}
-
-#[cfg(feature = "experimental")]
-fn register_ethereum(
-    da_config: DaServiceConfig,
-    methods: &mut jsonrpsee::RpcModule<()>,
-) -> Result<(), anyhow::Error> {
-    use std::fs;
-
-    let data = fs::read_to_string(TX_SIGNER_PRIV_KEY_PATH).context("Unable to read file")?;
-
-    let hex_key: HexKey =
-        serde_json::from_str(&data).context("JSON does not have correct format.")?;
-
-    let tx_signer_private_key = DefaultPrivateKey::from_hex(&hex_key.hex_priv_key).unwrap();
-
-    let ethereum_rpc = get_ethereum_rpc(da_config, tx_signer_private_key);
-    methods
-        .merge(ethereum_rpc)
-        .context("Failed to merge Ethereum RPC modules")
 }
