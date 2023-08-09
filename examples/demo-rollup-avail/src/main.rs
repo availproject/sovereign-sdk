@@ -19,7 +19,7 @@ use sov_rollup_interface::stf::StateTransitionFunction;
 use sov_modules_stf_template::{SequencerOutcome, TxEffect};
 use sov_sequencer::get_sequencer_rpc;
 use sov_stf_runner::{from_toml_path, get_ledger_rpc, StateTransitionRunner};
-use crate::config::RollupConfig;
+use crate::config::Config;
 use sov_state::Storage;
 use tracing::{debug, info, Level};
 
@@ -65,7 +65,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .nth(1)
         .unwrap_or_else(|| "rollup_config.toml".to_string());
     debug!("Starting demo rollup with config {}", rollup_config_path);
-    let rollup_config: RollupConfig =
+    let config: Config =
         from_toml_path(&rollup_config_path).context("Failed to read rollup configuration")?;
 
     // Initializing logging
@@ -77,19 +77,19 @@ async fn main() -> Result<(), anyhow::Error> {
         .expect("Cannot fail to set subscriber");
 
     // Initialize the ledger database, which stores blocks, transactions, events, etc.
-    let ledger_db = initialize_ledger(&rollup_config.runner.storage.path);
+    let ledger_db = initialize_ledger(&config.rollup_config.runner.storage.path);
 
-    let node_client = presence::build_client(rollup_config.da.node_client_url.to_string(), false)
+    let node_client = presence::build_client(config.da.node_client_url.to_string(), false)
         .await
         .unwrap();
-    let light_client_url = rollup_config.da.light_client_url.to_string();
+    let light_client_url = config.da.light_client_url.to_string();
     // Initialize the Avail service using the DaService interface
     let da_service = AvailDaProvider {
         node_client,
         light_client_url,
     };
 
-    let mut app = App::<Risc0Verifier, AvailBlobTransaction>::new(rollup_config.runner.clone());
+    let mut app = App::<Risc0Verifier, AvailBlobTransaction>::new(config.rollup_config.runner.storage.clone());
 
     let storage = app.get_storage();
     let mut methods = get_rpc_methods::<DefaultContext>(storage);
@@ -99,14 +99,14 @@ async fn main() -> Result<(), anyhow::Error> {
         register_ledger(ledger_db.clone(), &mut methods)?;
         register_sequencer(da_service.clone(), &mut app, &mut methods)?;
         #[cfg(feature = "experimental")]
-        register_ethereum(rollup_config.da.clone(), &mut methods)?;
+        register_ethereum(config.da.clone(), &mut methods)?;
     }
 
     let storage = app.get_storage();
-    let genesis_config = get_genesis_config(&rollup_config.sequencer_da_address);
+    let genesis_config = get_genesis_config(&config.sequencer_da_address);
 
     let mut runner = StateTransitionRunner::new(
-        rollup_config,
+        config.rollup_config,
         da_service,
         ledger_db,
         app.stf,
