@@ -8,14 +8,14 @@ use demo_stf::genesis_config::create_demo_genesis_config;
 use demo_stf::runtime::GenesisConfig;
 use methods::{ROLLUP_ELF, ROLLUP_ID};
 use risc0_adapter::host::{Risc0Host, Risc0Verifier};
-use serde::Deserialize;
+
 use sov_modules_api::PrivateKey;
 use sov_rollup_interface::services::da::DaService;
 use sov_rollup_interface::stf::StateTransitionFunction;
 use sov_rollup_interface::services::da::SlotData;
 use sov_rollup_interface::zk::ZkvmHost;
 use sov_state::Storage;
-use sov_stf_runner::{from_toml_path, Config as RunnerConfig};
+use sov_stf_runner::{from_toml_path};
 use tracing::{info, Level};
 use presence::service::DaProvider as AvailDaProvider;
 use presence::spec::transaction::AvailBlobTransaction;
