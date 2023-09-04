@@ -5,7 +5,10 @@ use anyhow::Context;
 use celestia::verifier::address::CelestiaAddress;
 use celestia::verifier::RollupParams;
 use celestia::CelestiaService;
+use presence::service::{DaProvider as AvailService, DaServiceConfig as AvailServiceConfig};
+use presence::spec::address::AvailAddress;
 use const_rollup_config::SEQUENCER_DA_ADDRESS;
+use const_rollup_config::SEQUENCER_AVAIL_DA_ADDRESS;
 #[cfg(feature = "experimental")]
 use demo_stf::app::DefaultPrivateKey;
 use demo_stf::app::{App, DefaultContext};
@@ -66,6 +69,39 @@ pub async fn new_rollup_with_celestia_da(
 
     let app = App::new(rollup_config.storage);
     let sequencer_da_address = CelestiaAddress::from_str(SEQUENCER_DA_ADDRESS)?;
+    let genesis_config = get_genesis_config(sequencer_da_address);
+
+    Ok(Rollup {
+        app,
+        da_service,
+        ledger_db,
+        runner_config: rollup_config.runner,
+        genesis_config,
+        #[cfg(feature = "experimental")]
+        eth_rpc_config: EthRpcConfig {
+            min_blob_size: Some(1),
+            tx_signer_priv_key: read_tx_signer_priv_key()?,
+        },
+    })
+}
+
+/// Creates celestia based rollup.
+pub async fn new_rollup_with_avail_da(
+    rollup_config_path: &str,
+) -> Result<Rollup<Risc0Verifier, AvailService>, anyhow::Error> {
+    debug!("Starting demo rollup with config {}", rollup_config_path);
+    let rollup_config: RollupConfig<AvailServiceConfig> =
+        from_toml_path(rollup_config_path).context("Failed to read rollup configuration")?;
+
+    let ledger_db = initialize_ledger(&rollup_config.storage.path);
+
+    let da_service = AvailService::new(
+        rollup_config.da.clone()
+    )
+    .await;
+
+    let app = App::new(rollup_config.storage);
+    let sequencer_da_address = AvailAddress::from_str(SEQUENCER_AVAIL_DA_ADDRESS)?;
     let genesis_config = get_genesis_config(sequencer_da_address);
 
     Ok(Rollup {

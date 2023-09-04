@@ -4,6 +4,7 @@ CONTAINER_NAME=avail-light
 IMAGE_NAME=avail-light
 TEST_PRIVATE_KEY_PATH=../test-data/keys/minter_private_key.json
 SOV_CLI_REL_PATH=../../target/debug/sov-cli
+# TODO: create-new-app-key should update APP_ID.
 APP_ID=7
 
 ifndef SERIALIZED_BLOB_PATH
@@ -19,19 +20,11 @@ SEED_PHRASE := $(shell cat seed-phrase.json | grep -o '"secretPhrase": *"[^"]*"'
 endif
 
 key-exists: 
-	@test -s seed-phrase.json || make create-new-key && make update-da-address
-	@make update-da-address
+	@test -s seed-phrase.json || echo "Error: Call make create-new-key and replace const SEQUENCER_AVAIL_DA_ADDRESS in const-rollup-config with publicKey from the created seed-phrase.json"
 
 create-new-key: check-container-running
 	@echo "Creating new key..."
 	@docker run -it --pull=always docker.io/parity/subkey:latest generate --output-type json > seed-phrase.json
-
-update-da-address: 
-ifeq ($(shell uname -s),Darwin)
-	@sed -i '' 's/^\(sequencer_da_address = \)"[^"]*"/\1"$(shell cat seed-phrase.json | grep -o '"publicKey": *"[^"]*"' | cut -d '"' -f 4 | cut -c3-)"/' rollup_config.toml
-else
-	@sed -i 's/^\(sequencer_da_address = \)"[^"]*"/\1"$(shell cat seed-phrase.json | grep -o '"publicKey": *"[^"]*"' | cut -d '"' -f 4 | cut -c3-)"/' rollup_config.toml
-endif
 
 create-new-app-key:
 	@cd ../avail-helper/ && cargo run --bin create_app_id -- --ws_uri wss://kate.avail.tools:443/ws --seed "$(SEED_PHRASE)"

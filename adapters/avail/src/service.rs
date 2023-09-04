@@ -16,6 +16,13 @@ use crate::spec::header::AvailHeader;
 use crate::spec::transaction::AvailBlobTransaction;
 use crate::spec::DaLayerSpec;
 
+/// Runtime configuration for the DA service
+#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct DaServiceConfig {
+    pub light_client_url: String,
+    pub node_client_url: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct DaProvider {
     pub node_client: OnlineClient<AvailConfig>,
@@ -33,29 +40,18 @@ impl DaProvider {
         format!("{light_client_url}/v1/confidence/{block_num}")
     }
 
-    async fn new(
-        config: RuntimeConfig,
+    pub async fn new(
+        config: DaServiceConfig,
     ) -> Self {
-        let node_client = config.node_client.unwrap();
+        let node_client = avail_subxt::build_client(config.node_client_url.to_string(), false)
+        .await
+        .unwrap();
         let light_client_url = config.light_client_url;
 
         DaProvider {
             node_client,
             light_client_url,
         }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RuntimeConfig {
-    light_client_url: String,
-    #[serde(skip)]
-    node_client: Option<OnlineClient<AvailConfig>>,
-}
-
-impl PartialEq for RuntimeConfig {
-    fn eq(&self, other: &Self) -> bool {
-        self.light_client_url == other.light_client_url
     }
 }
 
