@@ -32,6 +32,18 @@ impl DaProvider {
         let light_client_url = self.light_client_url.clone();
         format!("{light_client_url}/v1/confidence/{block_num}")
     }
+
+    async fn new(
+        config: RuntimeConfig,
+    ) -> Self {
+        let node_client = config.node_client.unwrap();
+        let light_client_url = config.light_client_url;
+
+        DaProvider {
+            node_client,
+            light_client_url,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -107,8 +119,6 @@ async fn wait_for_appdata(appdata_url: &str, block: u32) -> anyhow::Result<Extri
 
 #[async_trait]
 impl DaService for DaProvider {
-    type RuntimeConfig = RuntimeConfig;
-
     type Spec = DaLayerSpec;
 
     type FilteredBlock = AvailBlock;
@@ -178,19 +188,6 @@ impl DaService for DaProvider {
         <Self::Spec as DaSpec>::CompletenessProof,
     ) {
         ((), ())
-    }
-
-    async fn new(
-        config: Self::RuntimeConfig,
-        _chain_params: <Self::Spec as DaSpec>::ChainParams,
-    ) -> Self {
-        let node_client = config.node_client.unwrap();
-        let light_client_url = config.light_client_url;
-
-        DaProvider {
-            node_client,
-            light_client_url,
-        }
     }
 
     async fn send_transaction(&self, _blob: &[u8]) -> Result<(), Self::Error> {

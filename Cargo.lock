@@ -5493,6 +5493,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "avail-subxt",
+ "borsh",
  "bytes",
  "parity-scale-codec",
  "primitive-types",

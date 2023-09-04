@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+borsh = { workspace = true, features = ["bytes"] }
 sov-rollup-interface = { path = "../../rollup-interface" }
 bytes = { version = "1.2.1", features = ["serde"]}
-sp-core = { version = "21.0.0", optional = true }
+sp-core = { version = "21.0.0", default-feature = false, features = ["full_crypto"]  }
 primitive-types = { version = "0.12.1", features = ["serde"]}
 subxt = { version = "0.27.1", optional = true }
 avail-subxt = { git = "https://github.com/availproject/avail.git", tag = "v1.6.0", features = ["std"], optional = true }
@@ -25,5 +26,5 @@ thiserror = { workspace = true }
 
 [features]
 default = ["native"]
-native = ["dep:tokio", "dep:codec", "dep:reqwest", "dep:avail-subxt", "dep:subxt", "dep:sp-core"]
+native = ["dep:tokio", "dep:codec", "dep:reqwest", "dep:avail-subxt", "dep:subxt"]
 verifier = []
