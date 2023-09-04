@@ -7,7 +7,6 @@ use tracing_subscriber::{fmt, EnvFilter};
 
 #[cfg(test)]
 mod test_rpc;
-mod config;
 
 /// Main demo runner. Initialize a DA chain, and starts a demo-rollup using the config provided
 /// (or a default config if not provided). Then start checking the blocks sent to the DA layer in

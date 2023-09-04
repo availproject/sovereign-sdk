@@ -18,7 +18,6 @@ use sov_rollup_interface::zk::ZkvmHost;
 use sov_state::Storage;
 use sov_stf_runner::{from_toml_path, RollupConfig};
 use tracing::{info, Level};
-use sov_stf_runner::RollupConfig;
 
 // The rollup stores its data in the namespace b"sov-test" on Celestia
 const ROLLUP_NAMESPACE: NamespaceId = NamespaceId(ROLLUP_NAMESPACE_RAW);
@@ -49,7 +48,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // New Celestia DA service to fetch blocks from the DA node (light client / docker / mock DA)
     let da_service = CelestiaService::new(
-        config.da.clone(),
+        rollup_config.da.clone(),
         RollupParams {
             namespace: ROLLUP_NAMESPACE,
         },

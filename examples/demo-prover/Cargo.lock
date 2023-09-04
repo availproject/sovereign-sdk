@@ -801,6 +801,7 @@ dependencies = [
  "sov-accounts",
  "sov-bank",
  "sov-blob-storage",
+ "sov-chain-state",
  "sov-cli",
  "sov-modules-api",
  "sov-modules-stf-template",
@@ -3680,6 +3681,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "sov-chain-state"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "borsh",
+ "jsonrpsee 0.18.2",
+ "serde",
+ "serde_json",
+ "sov-modules-api",
+ "sov-modules-macros",
+ "sov-rollup-interface",
+ "sov-state",
+]
+
+[[package]]
 name = "sov-cli"
 version = "0.1.0"
 dependencies = [
@@ -3767,6 +3783,7 @@ dependencies = [
  "risc0-adapter",
  "serde",
  "serde_json",
+ "sov-cli",
  "sov-db",
  "sov-modules-api",
  "sov-modules-stf-template",
