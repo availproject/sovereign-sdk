@@ -9,6 +9,7 @@ use demo_stf::runtime::GenesisConfig;
 use methods::{ROLLUP_ELF, ROLLUP_ID};
 use presence::service::{DaProvider, DaServiceConfig};
 use presence::spec::transaction::AvailBlobTransaction;
+use presence::spec::address::AvailAddress;
 use presence::spec::DaLayerSpec;
 use risc0_adapter::host::{Risc0Host, Risc0Verifier};
 use sov_modules_api::PrivateKey;
@@ -20,7 +21,7 @@ use sov_stf_runner::{from_toml_path, RollupConfig};
 use tracing::{info, Level};
 
 pub fn get_genesis_config(
-    sequencer_da_address: &str,
+    sequencer_da_address: &AvailAddress,
 ) -> GenesisConfig<DefaultContext, DaLayerSpec> {
     let sequencer_private_key = DefaultPrivateKey::generate();
 
@@ -28,7 +29,6 @@ pub fn get_genesis_config(
         100000000,
         sequencer_private_key.default_address(),
         sequencer_da_address.as_ref().to_vec(),
-        &sequencer_private_key,
         &sequencer_private_key,
     )
 }
@@ -57,14 +57,15 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let da_service = DaProvider::new(rollup_config.da.clone()).await;
 
-    let app: App<Risc0Verifier, DaLayerSpec> = App::new(rollup_config.storage);
+    let mut app: App<Risc0Verifier, DaLayerSpec> = App::new(rollup_config.storage);
 
     let is_storage_empty = app.get_storage().is_empty();
-
+    
+    let sequencer_da_address = AvailAddress::from_str(SEQUENCER_AVAIL_DA_ADDRESS)?;
     if is_storage_empty {
         info!("Starting from empty storage, initialization chain");
         app.stf
-            .init_chain(get_genesis_config(&SEQUENCER_AVAIL_DA_ADDRESS));
+            .init_chain(get_genesis_config(&sequencer_da_address));
     }
 
     let mut prev_state_root = app
@@ -99,7 +100,7 @@ async fn main() -> Result<(), anyhow::Error> {
         host.write_to_guest(&completeness_proof);
         host.write_to_guest(&blob_txs);
 
-        let result = app.stf.apply_slot(Default::default(), &mut blob_txs);
+        let result = app.stf.apply_slot(Default::default(), &filtered_block, &mut blob_txs);
 
         host.write_to_guest(&result.witness);
 
