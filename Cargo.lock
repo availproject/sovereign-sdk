@@ -5502,6 +5502,7 @@ dependencies = [
  "serde_json",
  "sov-rollup-interface",
  "sp-core 21.0.0",
+ "sp-core-hashing 10.0.0",
  "subxt",
  "thiserror",
  "tokio",
@@ -8410,6 +8411,20 @@ dependencies = [
  "sha2 0.10.7",
  "sha3",
  "sp-std 8.0.0",
+ "twox-hash",
+]
+
+[[package]]
+name = "sp-core-hashing"
+version = "10.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e360755a2706a76886d58776665cad0db793dece3c7d390455b28e8a1efd6285"
+dependencies = [
+ "blake2b_simd",
+ "byteorder",
+ "digest 0.10.7",
+ "sha2 0.10.7",
+ "sha3",
  "twox-hash",
 ]
 
