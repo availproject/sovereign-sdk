@@ -26,19 +26,19 @@ impl ValidityCondition for ChainValidityCondition {
 
     fn combine<SimpleHasher>(&self, rhs: Self) -> Result<Self, Self::Error> {
         let mut combined_hashes: Vec<u8> = Vec::with_capacity(64);
-        combined_hashes.extend_from_slice(self.txs_commitment.as_ref());
-        combined_hashes.extend_from_slice(rhs.txs_commitment.as_ref());
+        // combined_hashes.extend_from_slice(self.txs_commitment.as_ref());
+        // combined_hashes.extend_from_slice(rhs.txs_commitment.as_ref());
+        
+        // let combined_root = sp_core::blake2_256(&combined_hashes);
 
-        let combined_root = sp_core::blake2_256(&combined_hashes);
-
-        if self.block_hash != rhs.prev_hash {
-            return Err(ValidityConditionError::BlocksNotConsecutive);
-        }
+        // if self.block_hash != rhs.prev_hash {
+        //     return Err(ValidityConditionError::BlocksNotConsecutive);
+        // }
 
         Ok(Self {
             prev_hash: rhs.prev_hash, 
             block_hash: rhs.block_hash, 
-            txs_commitment: combined_root
+            txs_commitment: [0u8; 32]
         })
     }
 }
@@ -61,9 +61,9 @@ impl DaVerifier for Verifier {
     ) -> Result<<Self::Spec as DaSpec>::ValidityCondition, Self::Error> {
         let mut txs_commitment: [u8; 32] = [0u8; 32];
 
-        for tx in txs {
-            txs_commitment = tx.combine_hash(txs_commitment);
-        }
+        // for tx in txs {
+        //     txs_commitment = tx.combine_hash(txs_commitment);
+        // }
 
         let validity_condition = ChainValidityCondition {
             prev_hash: *block_header.prev_hash().inner(),

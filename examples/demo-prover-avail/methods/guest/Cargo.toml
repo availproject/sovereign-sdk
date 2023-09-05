@@ -11,6 +11,7 @@ presence = { path = "../../../../adapters/avail", default-features = false, feat
 risc0-zkvm = { version = "0.16", default-features = false, features = ["std"] }
 borsh = { version = "0.10.3", features = ["bytes"] }
 demo-stf = { path = "../../../demo-stf", default-features = false }
+const-rollup-config = { path = "../../../const-rollup-config" }
 sov-rollup-interface = { path = "../../../../rollup-interface" }
 risc0-adapter = { path = "../../../../adapters/risc0", default-features = false }
 

@@ -43,6 +43,7 @@ impl BlobReaderTrait for AvailBlobTransaction {
 }
 
 impl AvailBlobTransaction {
+    #[cfg(feature = "native")]
     pub fn new(unchecked_extrinsic: &AppUncheckedExtrinsic) -> Self {
         let address = match &unchecked_extrinsic.signature {
             Some((subxt::utils::MultiAddress::Id(id), _, _)) => AvailAddress(id.clone().0),
@@ -62,6 +63,7 @@ impl AvailBlobTransaction {
         }
     }
 
+    #[cfg(feature = "native")]
     pub fn combine_hash(&self, hash: [u8; 32]) -> [u8; 32] {
         let mut combined_hashes: Vec<u8> = Vec::with_capacity(64);
         combined_hashes.extend_from_slice(hash.as_ref());

@@ -1,32 +1,31 @@
-mod config;
-
 use std::env;
+use std::str::FromStr;
 
 use anyhow::Context;
-use demo_stf::app::{App, DefaultPrivateKey, DefaultContext};
+use const_rollup_config::{ROLLUP_NAMESPACE_RAW, SEQUENCER_DA_ADDRESS};
+use demo_stf::app::{App, DefaultPrivateKey};
 use demo_stf::genesis_config::create_demo_genesis_config;
-use demo_stf::runtime::GenesisConfig;
 use methods::{ROLLUP_ELF, ROLLUP_ID};
 use risc0_adapter::host::{Risc0Host, Risc0Verifier};
-
 use sov_modules_api::PrivateKey;
 use sov_rollup_interface::services::da::DaService;
 use sov_rollup_interface::stf::StateTransitionFunction;
-use sov_rollup_interface::services::da::SlotData;
 use sov_rollup_interface::zk::ZkvmHost;
 use sov_state::Storage;
-use sov_stf_runner::{from_toml_path};
+use sov_stf_runner::{from_toml_path, RollupConfig};
 use tracing::{info, Level};
+
 use presence::service::DaProvider as AvailDaProvider;
 use presence::spec::transaction::AvailBlobTransaction;
-use crate::config::Config;
+use presence::spec::DaLayerSpec;
 
-pub fn get_genesis_config(sequencer_da_address: &str) -> GenesisConfig<DefaultContext> {
+pub fn get_genesis_config(sequencer_da_address: &str) -> GenesisConfig<DefaultContext, DaLayerSpec> {
     let sequencer_private_key = DefaultPrivateKey::generate();
+    
     create_demo_genesis_config(
         100000000,
         sequencer_private_key.default_address(),
-        hex::decode(sequencer_da_address).unwrap(),
+        sequencer_da_address.as_ref().to_vec(),
         &sequencer_private_key,
         &sequencer_private_key,
     )
@@ -45,21 +44,15 @@ async fn main() -> Result<(), anyhow::Error> {
     let rollup_config_path = env::args()
         .nth(1)
         .unwrap_or_else(|| "rollup_config.toml".to_string());
-    let config: Config =
-        from_toml_path(&rollup_config_path).context("Failed to read rollup configuration")?;
+    let rollup_config: RollupConfig<AvailServiceConfig> =
+        from_toml_path(rollup_config_path).context("Failed to read rollup configuration")?;
 
-    let node_client = presence::build_client(config.da.node_client_url.to_string(), false)
-        .await
-        .unwrap();
-    let light_client_url = config.da.light_client_url.to_string();
-    // Initialize the Avail service using the DaService interface
-    let da_service = AvailDaProvider {
-        node_client,
-        light_client_url,
-    };
+   let da_service = AvailService::new(
+        rollup_config.da.clone()
+    )
+    .await;
 
-    let app: App<Risc0Verifier, AvailBlobTransaction> =
-    App::new(config.rollup_config.runner.storage.clone());
+    let app: App<Risc0Verifier, DaLayerSpec> = App::new(rollup_config.storage);
 
     let is_storage_empty = app.get_storage().is_empty();
     let mut demo = app.stf;
@@ -68,7 +61,7 @@ async fn main() -> Result<(), anyhow::Error> {
         // Check if the rollup has previously been initialized
         if is_storage_empty {
             info!("No history detected. Initializing chain...");
-            demo.init_chain(get_genesis_config(&config.sequencer_da_address));
+            demo.init_chain(get_genesis_config(&SEQUENCER_AVAIL_DA_ADDRESS));
             info!("Chain initialization is done.");
         } else {
             info!("Chain is already initialized. Skipping initialization");

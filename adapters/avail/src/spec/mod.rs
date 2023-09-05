@@ -7,6 +7,7 @@ mod hash;
 pub mod header;
 pub mod transaction;
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct DaLayerSpec;
 
 impl DaSpec for DaLayerSpec {
