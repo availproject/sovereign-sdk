@@ -44,6 +44,7 @@ impl<B: BatchBuilder + Send + Sync, T: DaService + Send + Sync> Sequencer<B, T> 
         let num_txs = blob.len();
         let blob: Vec<u8> = borsh::to_vec(&blob)?;
 
+        println!("Sending avial DA");
         match self.da_service.send_transaction(&blob).await {
             Ok(_) => Ok(num_txs),
             Err(e) => Err(anyhow!("failed to submit batch: {:?}", e)),
