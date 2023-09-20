@@ -2,18 +2,18 @@ use core::time::Duration;
 
 use anyhow::anyhow;
 use async_trait::async_trait;
-use avail_subxt::AvailConfig;
 use avail_subxt::api;
-use avail_subxt::primitives::AvailExtrinsicParams;
 use avail_subxt::api::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+use avail_subxt::primitives::AvailExtrinsicParams;
+use avail_subxt::AvailConfig;
 use reqwest::StatusCode;
 
 use sov_rollup_interface::da::DaSpec;
 use sov_rollup_interface::services::da::DaService;
-use sp_keyring::sr25519::sr25519::{Pair};
 use sp_core::crypto::Pair as PairTrait;
-use subxt::OnlineClient;
+use sp_keyring::sr25519::sr25519::Pair;
 use subxt::tx::PairSigner;
+use subxt::OnlineClient;
 use tracing::info;
 
 use crate::avail::{Confidence, ExtrinsicsData};
@@ -21,6 +21,7 @@ use crate::spec::block::AvailBlock;
 use crate::spec::header::AvailHeader;
 use crate::spec::transaction::AvailBlobTransaction;
 use crate::spec::DaLayerSpec;
+use crate::verifier::Verifier;
 
 /// Runtime configuration for the DA service
 #[derive(Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -49,15 +50,13 @@ impl DaProvider {
         format!("{light_client_url}/v1/confidence/{block_num}")
     }
 
-    pub async fn new(
-        config: DaServiceConfig,
-    ) -> Self {
+    pub async fn new(config: DaServiceConfig) -> Self {
         let pair = Pair::from_string_with_seed(&config.seed, None).unwrap();
         let signer = PairSigner::<AvailConfig, Pair>::new(pair.0.clone());
 
         let node_client = avail_subxt::build_client(config.node_client_url.to_string(), false)
-        .await
-        .unwrap();
+            .await
+            .unwrap();
         let light_client_url = config.light_client_url;
 
         DaProvider {
@@ -132,6 +131,8 @@ impl DaService for DaProvider {
 
     type FilteredBlock = AvailBlock;
 
+    type Verifier = Verifier;
+
     type Error = anyhow::Error;
 
     // Make an RPC call to the node to get the finalized block at the given height, if one exists.
@@ -197,15 +198,16 @@ impl DaService for DaProvider {
 
     async fn send_transaction(&self, blob: &[u8]) -> Result<(), Self::Error> {
         let data_transfer = api::tx()
-        .data_availability()
-        .submit_data(BoundedVec(blob.to_vec()));
-        
+            .data_availability()
+            .submit_data(BoundedVec(blob.to_vec()));
+
         let extrinsic_params = AvailExtrinsicParams::new_with_app_id(7.into());
 
-        let h = self.node_client
-        .tx()
-        .sign_and_submit_then_watch(&data_transfer, &self.signer, extrinsic_params)
-        .await?;
+        let h = self
+            .node_client
+            .tx()
+            .sign_and_submit_then_watch(&data_transfer, &self.signer, extrinsic_params)
+            .await?;
 
         println!("Transaction submitted: {:#?}", h.extrinsic_hash());
 
