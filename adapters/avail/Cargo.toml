@@ -1,7 +1,15 @@
 [package]
-name = "presence"
-version = "0.1.0"
-edition = "2021"
+name = "sov-avail-adapter"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+publish.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 borsh = { workspace = true, features = ["bytes"] }
@@ -10,7 +18,7 @@ bytes = { version = "1.2.1", features = ["serde"]}
 primitive-types = { version = "0.12.1", features = ["serde"]}
 sp-core-hashing = "10.0.0"
 subxt = { version = "0.27.1", optional = true }
-avail-subxt = { git = "https://github.com/availproject/avail.git", tag = "v1.6.0", features = ["std"], optional = true }
+avail-subxt = { git = "https://github.com/availproject/avail.git", tag = "v1.6.3", features = ["std"], optional = true }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "full", "bit-vec"], optional = true }
 
 #Convenience

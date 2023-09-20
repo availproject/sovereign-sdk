@@ -4,6 +4,9 @@ use primitive_types::H256;
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::da::BlockHeaderTrait;
 
+const KATE_START_TIME: i64 = 1686066440;
+const KATE_SECONDS_PER_BLOCK: i64 = 20;
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Header {
@@ -48,5 +51,15 @@ impl BlockHeaderTrait for AvailHeader {
 
     fn hash(&self) -> Self::Hash {
         self.hash.clone()
+    }
+
+    fn height(&self) -> u64 {
+        self.header.number as u64
+    }
+
+    fn time(&self) -> sov_rollup_interface::da::Time {
+        sov_rollup_interface::da::Time::from_secs(
+            KATE_START_TIME + (self.header.number as i64 * KATE_SECONDS_PER_BLOCK),
+        )
     }
 }

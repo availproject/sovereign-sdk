@@ -1,6 +1,6 @@
 use core::fmt::{Display, Formatter};
-use std::str::FromStr;
 use std::hash::Hash;
+use std::str::FromStr;
 
 use primitive_types::H256;
 use serde::{Deserialize, Serialize};
@@ -31,10 +31,9 @@ impl From<[u8; 32]> for AvailAddress {
 
 impl FromStr for AvailAddress {
     type Err = <H256 as FromStr>::Err;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let h_256 = H256::from_str(s)?;
-
 
         Ok(Self(h_256.to_fixed_bytes()))
     }
