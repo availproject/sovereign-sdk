@@ -6,7 +6,7 @@ This is a demo full node running a simple Sovereign SDK rollup on [Avail](https:
 
 This demo shows how to integrate a State Transition Function with a DA layer and a ZKVM to create a full
 zk-rollup. The code in this repository corresponds to running a full-node of the rollup, which executes
-every transaction. If you want to see the logic for _proof generation_, check out the [demo-prover](../demo-prover/)
+every transaction. If you want to see the logic for _proof generation_, check out the [demo-prover-avail](../demo-prover-avail/)
 package instead.
 
 By swapping out or modifying the imported state transition function, you can customize
